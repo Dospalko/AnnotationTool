@@ -9,8 +9,14 @@ import AnnotationForm from "./components/annotation/AnnotationForm";
 import PdfUpload from "./components/annotation/PdfUpload";
 import HomePage from "./pages/HomePage";
 import FeaturesPage from "./pages/FeaturesPage";
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 
+AOS.init({
+  duration: 1200,  // Délka animace v milisekundách
+  // Můžete přidat další možnosti zde
+});
 
 // Main App Component
 function App() {
