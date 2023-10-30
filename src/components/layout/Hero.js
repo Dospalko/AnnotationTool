@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import Particles from 'react-particles-js'; // Pridajte toto
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
@@ -12,38 +11,16 @@ const Hero = () => {
   useEffect(() => {
     AOS.init({
       duration: 1200,
-      once: true, 
-      mirror: false 
+      once: true, // Animacia sa zobrazi len raz pri prvom nacitani
+      mirror: false // Animacia sa nezopakuje pri spatnom skrolovani
     });
   }, []);
 
   return (
     <div
-      className="relative bg-cover bg-center bg-no-repeat font-base text-white h-screen flex flex-col justify-center items-center"
+      className=" bg-cover bg-center bg-no-repeat font-base text-white h-screen flex flex-col justify-center items-center"
       style={{ backgroundImage: `url('/bg.png')` }}
     >
-      {/* Pridaný Particles komponent */}
-      <Particles 
-        className="absolute top-0 left-0 w-full h-full"
-        params={{
-          particles: {
-            number: {
-              value: 150,
-              density: {
-                enable: true,
-                value_area: 800
-              }
-            },
-            color: {
-              value: "#ffffff"
-            },
-            shape: {
-              type: "circle"
-            }
-          }
-        }}
-      />
-
       <h1 data-aos="fade-down" className="text-6xl p-4 bg-black mb-4 mt-0">
         Your go-to Annotation Tool <br /> for the Slovak Language
       </h1>
