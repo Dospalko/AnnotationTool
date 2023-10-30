@@ -106,7 +106,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
               ref={fileInputRef}
             />
             {selectedFile ? (
-              <div className="flex items-center justify-center">
+              <div className="flex flex-col mt-20 items-center justify-center">
                 <span>{selectedFile.name}</span>
                 <button
                   onClick={cancelUpload}
@@ -114,9 +114,18 @@ const PdfUpload = ({ onUploadSuccess }) => {
                 >
                   x
                 </button>
+              
+          <button
+            onClick={enhancedUploadPdf}
+            disabled={!selectedFile || isUploading}
+            className="mt-5 px-6 py-2 bg-green-500 text-white rounded shadow-lg hover:bg-green-600"
+          >
+            {isUploading ? "Uploading..." : "Upload"}
+          </button>
+       
               </div>
             ) : (
-              <div className="flex flex-col items-center self-center w-full justify-center py-10 z-10">
+              <div className="flex flex-col mt-10 items-center self-center w-full justify-center py-10 z-10">
                 <p className="mb-2">Drag & Drop file here</p>
                 <p className="mb-2">OR</p>
                 <button className="px-4 py-2 bg-blue-500 text-white rounded">
@@ -147,7 +156,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
                   </thead>
                   <tbody>
                     {pdfTexts.map((text) => (
-                      <tr key={text.id} className="text-white">
+                      <tr key={text.id} className="text-white border-b-2 border-dashed">
                         <td className="w-1/3 mt-2  m-auto flex py-3">
                           <FontAwesomeIcon
                             icon={faFilePdf}
@@ -175,15 +184,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
             <div className="absolute top-[10px] left-[30px] w-[95%] h-[100%] bg-[#1AFF15] lg:block hidden transition-colors"></div>
           </div>
         </div>
-        <div className="flex">
-          <button
-            onClick={enhancedUploadPdf}
-            disabled={!selectedFile || isUploading}
-            className="mt-5 px-6 py-2 bg-green-500 text-white rounded shadow-lg hover:bg-green-600"
-          >
-            {isUploading ? "Uploading..." : "Upload"}
-          </button>
-        </div>
+       
       </div>
     </div>
   );

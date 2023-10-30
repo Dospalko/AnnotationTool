@@ -10,6 +10,7 @@ function Header() {
 
   return (
     <header className="bg-black font-base  text-white py-4 px-6">
+      
       <nav className="flex lg:flex-row text-2xl uppercase leading-6 flex-col shadow-2xl w-full">
         <div className="flex items-center justify-between w-full lg:w-full lg:justify-between">
           <span className="bg-white px-2"><h1 className="text-2xl  w-full font-semibold text-transparent bg-gradient-to-r bg-clip-text from-blue-500 to-purple-500 ">

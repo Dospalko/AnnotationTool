@@ -50,7 +50,7 @@ function FeaturesPage() {
     await loadFull(main);
   };
   return (
-    <section className="bg-gray-800 relative z-10 font-base text-white">
+    <section className="bg-gray-700 relative z-10 font-base text-white">
       <Particles
       id="tsparticles"
       init={particlesInit}
@@ -70,7 +70,7 @@ function FeaturesPage() {
                 }
             },
             "color": {
-                "value": "#fff"
+                "value": "#F700C6"
             },
             "shape": {
                 "type": "star",
@@ -176,7 +176,7 @@ function FeaturesPage() {
         <div className="absolute z-10 top-[15px] left-[12px] w-[98%] h-[50%] bg-[#F700C6] lg:block hidden transition-colors"></div>
       </div>
       {/* Search Bar */}
-      <div className="relative group z-10 p-1 mx-auto w-full sm:w-2/3 md:w-1/2 lg:w-1/3 ">
+      <div className="relative text-black group z-10 p-1 mx-auto w-full sm:w-2/3 md:w-1/2 lg:w-1/3 ">
         <div className="relative z-20 flex w-full items-center bg-white border-2 border-black">
          <FontAwesomeIcon className="ml-5 text-black" icon={faSearch}/>
           <input
