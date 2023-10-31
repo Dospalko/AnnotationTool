@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 import FeaturesPage from "./pages/FeaturesPage";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import Annotator from "./pages/Annotator";
 
 
 AOS.init({
@@ -25,6 +26,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/features" element={<FeaturesPage />}  />
+        <Route path="/annotator" element={<Annotator />}  />
       </Routes>
     </Router>
   );

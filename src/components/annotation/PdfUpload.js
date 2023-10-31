@@ -118,7 +118,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
           <button
             onClick={enhancedUploadPdf}
             disabled={!selectedFile || isUploading}
-            className="mt-5 px-6 py-2 bg-green-500 text-white rounded shadow-lg hover:bg-green-600"
+            className="mt-5 px-6 z-20 py-2 bg-green-500 text-white rounded shadow-lg hover:bg-green-600"
           >
             {isUploading ? "Uploading..." : "Upload"}
           </button>

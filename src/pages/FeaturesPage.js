@@ -7,11 +7,26 @@ import PdfUpload from "../components/annotation/PdfUpload";
 import FileUploader from "../components/annotation/FileUploader";
 import PdfTextDisplay from "../components/annotation/PdfTextDisplay";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight, faSearch } from "@fortawesome/free-solid-svg-icons";
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
+import { Link } from "react-router-dom";
 function FeaturesPage() {
   const [pdfTexts, setPdfTexts] = useState([]);
+  const [annotations, setAnnotations] = useState([]);
+
+  const fetchAnnotations = async () => {
+    try {
+      const res = await axios.get("/annotations"); // Adjust URL if needed
+      setAnnotations(res.data);
+    } catch (error) {
+      console.error("Could not fetch annotations:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnotations();
+  }, []);
 
   const fetchPdfTexts = async () => {
     try {
@@ -38,9 +53,6 @@ function FeaturesPage() {
   }, []);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
   const particlesInit = async (main) => {
     console.log(main);
 
@@ -49,124 +61,136 @@ function FeaturesPage() {
     // starting from v2 you can add only the features you need reducing the bundle size
     await loadFull(main);
   };
+  const searchPdfTexts = async () => {
+    try {
+      const res = await axios.get(`/search_all?q=${searchTerm}`);
+      setPdfTexts(res.data);
+    } catch (error) {
+      console.error("Failed to search:", error);
+    }
+  };
+
+  const handleSearchChange = async (e) => {
+    setSearchTerm(e.target.value);
+    await searchPdfTexts(); // Volanie vyhľadávacej funkcie po každej zmene
+  };
+
   return (
     <section className="bg-gray-700 relative z-10 font-base text-white">
       <Particles
-      id="tsparticles"
-      init={particlesInit}
+        id="tsparticles"
+        init={particlesInit}
+        options={{
+          fullScreen: {
+            enable: true,
+            zIndex: -1,
+          },
+          fpsLimit: 120,
+          particles: {
+            number: {
+              value: 10,
+              density: {
+                enable: false,
+                value_area: 800,
+              },
+            },
+            color: {
+              value: "#F700C6",
+            },
+            shape: {
+              type: "star",
+              options: {
+                sides: 5,
+              },
+            },
+            opacity: {
+              value: 0.8,
+              random: true,
+              anim: {
+                enable: false,
+                speed: 1,
+                opacity_min: 0.1,
+                sync: false,
+              },
+            },
+            size: {
+              value: 10,
+              random: false,
+              anim: {
+                enable: false,
+                speed: 40,
+                size_min: 0.1,
+                sync: false,
+              },
+            },
+            rotate: {
+              value: 0,
+              random: true,
+              direction: "clockwise",
+              animation: {
+                enable: true,
+                speed: 5,
+                sync: false,
+              },
+            },
+            line_linked: {
+              enable: true,
+              distance: 600,
+              color: "black",
+              opacity: 0.4,
+              width: 2,
+            },
+            move: {
+              enable: true,
+              speed: 1,
+              direction: "none",
+              random: false,
+              straight: false,
+              out_mode: "out",
+              attract: {
+                enable: false,
+                rotateX: 600,
+                rotateY: 1200,
+              },
+            },
+          },
+          interactivity: {
+            events: {
+              onhover: {
+                enable: true,
+                mode: ["repulse"],
+              },
 
-      options={{
-        "fullScreen": {
-            "enable": true,
-            "zIndex": -1
-        },
-        "fpsLimit": 120,
-        "particles": {
-            "number": {
-                "value": 10,
-                "density": {
-                    "enable": false,
-                    "value_area": 800
-                }
+              resize: true,
             },
-            "color": {
-                "value": "#F700C6"
-            },
-            "shape": {
-                "type": "star",
-                "options": {
-                    "sides": 5
-                }
-            },
-            "opacity": {
-                "value": 0.8,
-                "random": true,
-                "anim": {
-                    "enable": false,
-                    "speed": 1,
-                    "opacity_min": 0.1,
-                    "sync": false
-                }
-            },
-            "size": {
-                "value": 10,
-                "random": false,
-                "anim": {
-                    "enable": false,
-                    "speed": 40,
-                    "size_min": 0.1,
-                    "sync": false
-                }
-            },
-            "rotate": {
-                "value": 0,
-                "random": true,
-                "direction": "clockwise",
-                "animation": {
-                    "enable": true,
-                    "speed": 5,
-                    "sync": false
-                }
-            },
-            "line_linked": {
-                "enable": true,
-                "distance": 600,
-                "color": "black",
-                "opacity": 0.4,
-                "width": 2
-            },
-            "move": {
-                "enable": true,
-                "speed": 1,
-                "direction": "none",
-                "random": false,
-                "straight": false,
-                "out_mode": "out",
-                "attract": {
-                    "enable": false,
-                    "rotateX": 600,
-                    "rotateY": 1200
-                }
-            }
-        },
-        "interactivity": {
-            "events": {
-                "onhover": {
-                    "enable": true,
-                    "mode": ["repulse"]
+            modes: {
+              grab: {
+                distance: 400,
+                line_linked: {
+                  opacity: 1,
                 },
-              
-                "resize": true
+              },
+              bubble: {
+                distance: 400,
+                size: 40,
+                duration: 2,
+                opacity: 8,
+                speed: 3,
+              },
+              repulse: {
+                distance: 200,
+              },
+              push: {
+                particles_nb: 4,
+              },
+              remove: {
+                particles_nb: 2,
+              },
             },
-            "modes": {
-                "grab": {
-                    "distance": 400,
-                    "line_linked": {
-                        "opacity": 1
-                    }
-                },
-                "bubble": {
-                    "distance": 400,
-                    "size": 40,
-                    "duration": 2,
-                    "opacity": 8,
-                    "speed": 3
-                },
-                "repulse": {
-                    "distance": 200
-                },
-                "push": {
-                    "particles_nb": 4
-                },
-                "remove": {
-                    "particles_nb": 2
-                }
-            }
-        },
-        "retina_detect": true,
-  
-    }}
-    />
+          },
+          retina_detect: true,
+        }}
+      />
       <Header className="z-20 relative group" />
       {/* Heading */}
       <div className="relative group p-1 mt-10 mx-auto w-full sm:w-2/3 md:w-1/2 lg:w-1/3">
@@ -178,8 +202,10 @@ function FeaturesPage() {
       {/* Search Bar */}
       <div className="relative text-black group z-10 p-1 mx-auto w-full sm:w-2/3 md:w-1/2 lg:w-1/3 ">
         <div className="relative z-20 flex w-full items-center bg-white border-2 border-black">
-         <FontAwesomeIcon className="ml-5 text-black" icon={faSearch}/>
+          <FontAwesomeIcon className="ml-5 text-black" icon={faSearch} />
           <input
+            value={searchTerm}
+            onChange={handleSearchChange}
             type="text"
             placeholder="Search through your imports or annotations"
             className="flex-grow p-2 placeholder-gray-500 outline-none"
@@ -187,13 +213,49 @@ function FeaturesPage() {
         </div>
         <div className="absolute top-[10px] z-10 left-[12px] w-[98%] h-[90%] bg-[#F700C6] lg:block hidden transition-colors"></div>
       </div>
-    
+      {pdfTexts.length === 0 && annotations.length === 0 && <p>Žiadne výsledky.</p>}
+
+      <div className="search-results">
+        {searchTerm && (
+          <>
+            {pdfTexts.length > 0 && (
+              <div className="pdf-results">
+                {pdfTexts.map((pdf) => (
+                  <div key={pdf.id} className="pdf-text-item">
+                    <h3>{pdf.filename}</h3>
+                  </div>
+                ))}
+              </div>
+            )}
+            {annotations.length > 0 && (
+              <div className="annotation-results">
+                {annotations.map((annotation) => (
+                  <div key={annotation.id} className="annotation-item">
+                    <p>{annotation.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       {/* <AnnotationForm/> */}
       <div className="z-10">
         <PdfUpload onUploadSuccess={handleUploadSuccess} />
 
         <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} />
+        <div className="relative flex mb-10 justify-center items-center m-auto  group z-20 p-1 ">
+          <Link
+            to="/annotator"
+            className="relative z-10 bg-white text-black py-4 px-12 uppercase border-black border-2 flex items-center"
+          >
+            Continue <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+          </Link>
+          <div className="absolute top-[12px] left-[630px] w-[13%] flex justify-center m-auto items-center self-center h-[90%] bg-black group-hover:bg-[#53F541] transition-colors"></div>
+        </div>
       </div>
+
       <Footer />
     </section>
   );
