@@ -17,7 +17,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:heslo@localhost/a
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 entities = []
-
 class Annotation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(500))
