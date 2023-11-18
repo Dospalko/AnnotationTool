@@ -135,22 +135,23 @@ const PdfUpload = ({ onUploadSuccess }) => {
             )}
           </div>
 
-          <div className="mt-5 flex-2 font-base relative group">
+          <div className=" flex-2 mt-5 font-base relative group">
             {pdfTexts.length > 0 && (
               <div className="h-[calc(7*2.5rem)] z-10 relative overflow-y-auto">
                 {" "}
                 {/* Pevná výška pro 3 soubory a povolený vertikální posun */}
-                <table className="min-w-full border-2 bg-black text-white z-10">
-                  <thead>
-                    <tr>
-                      <th className="w-1/3 z-10   border-b border-gray-200 bg-gray-50   py-2 text-gray-600 uppercase tracking-wider">
-                        Icon
+                <table className="min-w-full  bg-black text-white z-10">
+                  <thead className=" bg-[#F700C6]">
+                    <tr className="my-10">
+                      <th className="w-1/3 z-10 pl-4   border-b border-[#F700C6] bg-[#F700C6]   py-2 text-black uppercase tracking-wider">
+                        
+                        <span className="bg-black my-4 text-white p-2">Icon</span>
                       </th>
-                      <th className="w-1/3 z-10 border-b border-gray-200 bg-gray-50 text-left px-4 py-2 text-gray-600 uppercase tracking-wider">
-                        Filename 
+                      <th className="w-1/3 z-10 border-b border-[#F700C6] bg-[#F700C6] text-left px-4 py-2 text-black uppercase tracking-wider">
+                        <span className="bg-black text-white p-2">Filename</span>
                       </th>
-                      <th className="w-1/3 z-10 border-b border-gray-200 bg-gray-50 text-left px-4 py-2 text-gray-600 uppercase tracking-wider">
-                        Actions
+                      <th className="w-1/3 z-10 border-b border-[#F700C6] bg-[#F700C6] text-left px-4 py-2 text-black uppercase tracking-wider">
+                        <span className="bg-black text-white p-2 mt-10">Actions</span>
                       </th>
                     </tr>
                   </thead>

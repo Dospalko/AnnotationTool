@@ -21,6 +21,7 @@ class Annotation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(500))
     color = db.Column(db.String(10))  # Save the color as a hex string
+    favorite = db.Column(db.Boolean, default=False)
 
     def __init__(self, text, color):
         self.text = text
@@ -141,16 +142,39 @@ def delete_annotation(annotation_id):
 @app.route('/annotations', methods=['GET'])
 def get_annotations():
     annotations = Annotation.query.all()
-    output = []
-    for annotation in annotations:
-        output.append({
-            'id': annotation.id,
-            'text': annotation.text,
-            'color': annotation.color
-        })
+    output = [{
+        'id': annotation.id,
+        'text': annotation.text,
+        'color': annotation.color,
+        'favorite': annotation.favorite  # Include the favorite status in the output
+    } for annotation in annotations]
     return jsonify(output)
 
 
+# Route to toggle the favorite status of an annotation
+@app.route('/toggle_favorite/<int:annotation_id>', methods=['POST'])
+def toggle_favorite(annotation_id):
+    annotation = Annotation.query.get(annotation_id)
+    if annotation:
+        annotation.favorite = not annotation.favorite
+        db.session.commit()
+        return jsonify({"message": "Favorite status toggled.", "favorite": annotation.favorite}), 200
+    else:
+        return jsonify({"error": "Annotation not found"}), 404
+
+# Route to retrieve all favorite annotations
+@app.route('/annotations/favorites', methods=['GET'])
+def get_favorite_annotations():
+    favorite_annotations = Annotation.query.filter_by(favorite=True).all()
+    favorites = [{"id": ann.id, "text": ann.text, "color": ann.color, "favorite": ann.favorite} for ann in favorite_annotations]
+    return jsonify(favorites)
+
+# Route to retrieve all non-favorite annotations
+@app.route('/annotations/non_favorites', methods=['GET'])
+def get_non_favorite_annotations():
+    non_favorite_annotations = Annotation.query.filter_by(favorite=False).all()
+    non_favorites = [{"id": ann.id, "text": ann.text, "color": ann.color, "favorite": ann.favorite} for ann in non_favorite_annotations]
+    return jsonify(non_favorites)
 
 
 @app.route('/search_all', methods=['GET'])

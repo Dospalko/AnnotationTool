@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi"; // Import icons from react-icons
+import { Link } from "react-router-dom";
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -40,12 +41,12 @@ function Header() {
         >
       
           <li>
-            <a
-              href="/about"
+            <Link
+              to="/features"
               className="text-white py-1  hover:text-[#53F541]  transition duration-300 block lg:inline-block"
             >
               GET STARTED
-            </a>
+            </Link>
           </li>
           <li>
             <a

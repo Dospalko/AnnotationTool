@@ -4,10 +4,11 @@ import Footer from "../components/layout/Footer";
 import AnnotationForm from "../components/annotation/AnnotationForm";
 import PdfTextDisplay from "../components/annotation/PdfTextDisplay";
 import axios from "axios";
+import Sidebar from "../components/layout/Sidebar";
 
 const Annotator = () => {
-
-   const [pdfTexts, setPdfTexts] = useState([]);
+  const [pdfTexts, setPdfTexts] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const fetchPdfTexts = async () => {
     try {
@@ -26,16 +27,22 @@ const Annotator = () => {
       console.error("Failed to delete PDF text:", error);
     }
   };
- 
+
   useEffect(() => {
     fetchPdfTexts();
   }, []);
-  
+
   return (
-    <div>
+    <div className="flex flex-col h-screen">
       <Header />
-      <AnnotationForm />
-      <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} />
+  <main className="flex-grow">
+        <div className="flex">
+          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+          <div className="w-full">
+          <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} />
+          </div>
+        </div>
+      </main>
 
       <Footer />
     </div>
@@ -43,3 +50,6 @@ const Annotator = () => {
 };
 
 export default Annotator;
+
+// <AnnotationForm />
+// <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} />

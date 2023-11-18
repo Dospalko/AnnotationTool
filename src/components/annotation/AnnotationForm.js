@@ -1,113 +1,181 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEdit,
+  faTrash,
+  faPlusCircle,
+  faStar as faSolidStar,
+  faStar as faRegularStar,
+} from "@fortawesome/free-solid-svg-icons";
 
 const AnnotationForm = () => {
   const [text, setText] = useState("");
   const [color, setColor] = useState("#ffffff");
   const [annotations, setAnnotations] = useState([]);
+  const [favoriteAnnotations, setFavoriteAnnotations] = useState([]);
+  const [nonFavoriteAnnotations, setNonFavoriteAnnotations] = useState([]);
 
-  const fetchAnnotations = async () => {
+  // Function to fetch favorite annotations
+  const fetchFavoriteAnnotations = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/annotations'); // Adjust URL if needed
-      setAnnotations(res.data);
+      const res = await axios.get(
+        "http://localhost:5000/annotations/favorites"
+      );
+      setFavoriteAnnotations(res.data);
     } catch (error) {
-      console.error('Could not fetch annotations:', error);
+      console.error("Could not fetch favorite annotations:", error);
     }
   };
 
-  useEffect(() => {
-    fetchAnnotations();
-  }, []);
-
-
-  const addAnnotation = async () => {
+  // Function to fetch non-favorite annotations
+  const fetchNonFavoriteAnnotations = async () => {
     try {
-      await axios.post("http://localhost:5000/add", {
-        // Adjust URL if needed
+      const res = await axios.get(
+        "http://localhost:5000/annotations/non_favorites"
+      );
+      setNonFavoriteAnnotations(res.data);
+    } catch (error) {
+      console.error("Could not fetch non-favorite annotations:", error);
+    }
+  };
+
+  const addAnnotation = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:5000/add", {
         text,
         color,
       });
-      setText("");
-      setColor("#ffffff");
-      await fetchAnnotations();
-      console.log("Annotation added successfully");
+      const newAnnotation = response.data; // The backend should return the full annotation object
+      setAnnotations((current) => [...current, newAnnotation]);
+      if (!newAnnotation.favorite) {
+        setNonFavoriteAnnotations((current) => [...current, newAnnotation]);
+      }
+      fetchFavoriteAnnotations();
+      fetchNonFavoriteAnnotations();
     } catch (error) {
-      console.log("Failed to add annotation:", error);
+      console.error("Failed to add annotation:", error);
     }
+    setText("");
+    setColor("#ffffff");
   };
-
   const deleteAnnotation = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/delete/${id}`);
-      await fetchAnnotations();
+      // Update the state to remove the deleted annotation
+      setFavoriteAnnotations((favs) => favs.filter((ann) => ann.id !== id));
+      setNonFavoriteAnnotations((nonFavs) =>
+        nonFavs.filter((ann) => ann.id !== id)
+      );
     } catch (error) {
       console.error(`Could not delete annotation with id ${id}:`, error);
     }
   };
-  
+
+  const toggleFavorite = async (id) => {
+    try {
+      await axios.post(`http://localhost:5000/toggle_favorite/${id}`);
+      fetchFavoriteAnnotations();
+      fetchNonFavoriteAnnotations();
+    } catch (error) {
+      console.error(
+        `Could not toggle favorite for annotation with id ${id}:`,
+        error
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchFavoriteAnnotations();
+    fetchNonFavoriteAnnotations();
+  }, []);
 
   return (
-    <div className="p-10">
-      <h1 className="text-2xl font-bold mb-4">Add Annotation</h1>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          addAnnotation();
-        }}
-      >
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-600">
-            Text
-          </label>
+    <div className="text-white">
+      <h1 className="text-xl font-bold mb-2">Manage Annotations</h1>
+      <form className="mb-4" onSubmit={addAnnotation}>
+        <div className="flex gap-2 text-black items-center mb-2">
           <input
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="mt-1 p-2 w-full border rounded-md"
+            placeholder="Enter annotation text"
+            className="flex-1 p-2 border rounded-md"
+            required
           />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-600">
-            Color
-          </label>
           <input
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="mt-1 p-2 w-16"
+            className="w-10 h-10 border rounded-md cursor-pointer"
           />
-        </div>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Add
-        </button>
-      </form>
-      <h1 className="text-2xl font-bold mb-4 mt-10">Annotations</h1>
-      <ul>
-        {annotations.map((annotation) => (
-          <li
-            key={annotation.id}
-            className={`p-4 rounded mb-2 flex items-center justify-between ${
-              annotation.color === "#ffffff"
-                ? "bg-white text-black border border-gray-300"
-                : "text-white"
-            }`}
-            style={{ backgroundColor: annotation.color }}
+          <button
+            type="submit"
+            className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            {annotation.text}
-            <button
-              onClick={() => deleteAnnotation(annotation.id)}
-              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Delete
-            </button>
-          </li>
+            <FontAwesomeIcon icon={faPlusCircle} />
+          </button>
+        </div>
+      </form>
+      {/* Favorites Section */}
+      <div className="favorites-section mb-4">
+        <h2 className="text-lg font-bold">Favorite Annotations</h2>
+        {favoriteAnnotations.map((annotation) => (
+          <AnnotationItem
+            key={annotation.id}
+            annotation={annotation}
+            toggleFavorite={toggleFavorite}
+            deleteAnnotation={deleteAnnotation}
+          />
         ))}
-      </ul>
+      </div>
+
+      {/* Non-Favorites Section */}
+      <div className="non-favorites-section">
+        <h2 className="text-lg font-bold">Other Annotations</h2>
+        {nonFavoriteAnnotations.map((annotation) => (
+          <AnnotationItem
+            key={annotation.id}
+            annotation={annotation}
+            toggleFavorite={toggleFavorite}
+            deleteAnnotation={deleteAnnotation}
+          />
+        ))}
+      </div>
     </div>
   );
 };
+
+const AnnotationItem = ({ annotation, toggleFavorite, deleteAnnotation }) => (
+  <div
+    style={{ backgroundColor: annotation.color }}
+    className="p-2 mb-2 flex justify-between items-center rounded shadow"
+  >
+    <span>{annotation.text}</span>
+    <div>
+      <button
+        onClick={() => toggleFavorite(annotation.id)}
+        className={`p-1 mr-2  ${
+          annotation.favorite ? "text-yellow-500" : "text-white"
+        }`}
+      >
+        <FontAwesomeIcon
+          icon={annotation.favorite ? faSolidStar : faRegularStar}
+        />
+      </button>
+
+      <button className="p-1 text-blue-500 mx-1">
+        <FontAwesomeIcon icon={faEdit} />
+      </button>
+      <button
+        onClick={() => deleteAnnotation(annotation.id)}
+        className="p-1 bg-red-500 text-white rounded hover:bg-red-600 mx-1"
+      >
+        <FontAwesomeIcon icon={faTrash} />
+      </button>
+    </div>
+  </div>
+);
 
 export default AnnotationForm;
