@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
+import Header from "../components/Header/Header";
+import Footer from "../components/Footer/Footer";
 import AnnotationForm from "../components/annotation/AnnotationForm";
 import PdfUpload from "../components/annotation/PdfUpload";
 import FileUploader from "../components/annotation/FileUploader";

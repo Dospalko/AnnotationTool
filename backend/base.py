@@ -39,20 +39,67 @@ class PdfText(db.Model):
 
 class Token(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    word = db.Column(db.String(50))
+    word = db.Column(db.String(50), unique=True)  # Add unique constraint
     pdf_text_id = db.Column(db.Integer, db.ForeignKey('pdf_text.id'), nullable=False)
+    annotation_id = db.Column(db.Integer, db.ForeignKey('annotation.id'), nullable=True)
+
+    annotation = db.relationship('Annotation', backref=db.backref('tokens', lazy=True))
+
+@app.route('/assign_annotation', methods=['POST'])
+def assign_annotation():
+    try:
+        data = request.json
+        token_id = data.get('token_id')
+        annotation_id = data.get('annotation_id')
+
+        if not token_id or not annotation_id:
+            return jsonify({"error": "Token ID or Annotation ID is missing"}), 400
+
+        token = Token.query.get(token_id)
+        if not token:
+            return jsonify({"error": "Token not found"}), 404
+
+        annotation = Annotation.query.get(annotation_id)
+        if not annotation:
+            return jsonify({"error": "Annotation not found"}), 404
+
+        token.annotation_id = annotation_id
+        db.session.commit()
+
+        return jsonify({"message": "Annotation assigned to token successfully."}), 200
+    except Exception as e:
+        # Log the exception for debugging
+        print(f"Error: {e}")
+        return jsonify({"error": "An internal error occurred"}), 500
 
 
 @app.route('/tokenize_pdf/<int:pdf_text_id>', methods=['GET'])
 def tokenize_pdf(pdf_text_id):
-    # 1. Retrieve the text for the given PDF ID
     pdf_text_record = PdfText.query.get_or_404(pdf_text_id)
-
-    # 2. Tokenize the text
     tokens = word_tokenize(pdf_text_record.text)
 
-    # 3. Return the tokens as a JSON response
-    return jsonify(tokens)
+    token_objects = []
+    for word in tokens:
+        token = Token.query.filter_by(word=word).first()
+        if not token:
+            token = Token(word=word, pdf_text_id=pdf_text_id)
+            db.session.add(token)
+            db.session.commit()
+        
+        annotation_data = None
+        if token.annotation_id:
+            annotation = Annotation.query.get(token.annotation_id)
+            annotation_data = {
+                'id': annotation.id,
+                'text': annotation.text,
+                'color': annotation.color
+            }
+
+        token_objects.append({'id': token.id, 'word': token.word, 'annotation': annotation_data})
+
+    return jsonify(token_objects)
+
+
 
 @app.route('/save_tokens/<int:pdf_text_id>', methods=['POST'])
 def save_tokens(pdf_text_id):
@@ -138,6 +185,20 @@ def delete_annotation(annotation_id):
     db.session.delete(annotation)
     db.session.commit()
     return jsonify({"message": "Annotation deleted."}), 200
+
+@app.route('/edit/<int:annotation_id>', methods=['PUT'])
+def edit_annotation(annotation_id):
+    annotation = Annotation.query.get(annotation_id)
+    if not annotation:
+        return jsonify({"message": "Annotation not found"}), 404
+
+    data = request.json
+    annotation.text = data.get('text', annotation.text)
+    annotation.color = data.get('color', annotation.color)
+    db.session.commit()
+
+    return jsonify({"message": "Annotation updated successfully.", "id": annotation.id}), 200
+
 
 @app.route('/annotations', methods=['GET'])
 def get_annotations():

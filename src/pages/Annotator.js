@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
+import Header from "../components/Header/Header";
+import Footer from "../components/Footer/Footer";
 import AnnotationForm from "../components/annotation/AnnotationForm";
 import PdfTextDisplay from "../components/annotation/PdfTextDisplay";
 import axios from "axios";
-import Sidebar from "../components/layout/Sidebar";
+import Sidebar from "../components/annotation/Sidebar";
 
 const Annotator = () => {
   const [pdfTexts, setPdfTexts] = useState([]);

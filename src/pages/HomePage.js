@@ -1,9 +1,9 @@
 import React from "react";
-import Header from "../components/layout/Header";
-import Hero from "../components/layout/Hero";
-import Features from "../components/layout/Features";
-import Works from "../components/layout/Works";
-import Footer from "../components/layout/Footer";
+import Header from "../components/Header/Header";
+import Hero from "../components/HomePage/Hero";
+import Features from "../components/HomePage/Features";
+import Works from "../components/HomePage/Works";
+import Footer from "../components/Footer/Footer";
 
 const HomePage = () => {
   return (

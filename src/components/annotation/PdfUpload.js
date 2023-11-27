@@ -143,7 +143,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
                 <table className="min-w-full  bg-black text-white z-10">
                   <thead className=" bg-[#F700C6]">
                     <tr className="my-10">
-                      <th className="w-1/3 z-10 pl-4   border-b border-[#F700C6] bg-[#F700C6]   py-2 text-black uppercase tracking-wider">
+                      <th className="w-1/3 z-10    border-b border-[#F700C6] bg-[#F700C6]   py-2 text-black uppercase tracking-wider">
                         
                         <span className="bg-black my-4 text-white p-2">Icon</span>
                       </th>
@@ -158,10 +158,10 @@ const PdfUpload = ({ onUploadSuccess }) => {
                   <tbody>
                     {pdfTexts.map((text) => (
                       <tr key={text.id} className="text-white border-b-2 border-dashed">
-                        <td className="w-1/3 mt-2  m-auto flex py-3">
+                        <td className="w-1/3 m-auto mt-4 items-center text-center justify-center align-middle  flex  py-3">
                           <FontAwesomeIcon
                             icon={faFilePdf}
-                            className="text-3xl"
+                            className="text-4xl"
                           />
                         </td>
                         <td className="w-1/3 text-left py-3 px-4">

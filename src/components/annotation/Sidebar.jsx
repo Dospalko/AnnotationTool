@@ -1,6 +1,6 @@
 // Sidebar.js
 import React, { useState } from "react";
-import AnnotationForm from "../annotation/AnnotationForm";
+import AnnotationForm from "./AnnotationForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 
