@@ -234,7 +234,7 @@ function FeaturesPage() {
         <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} />
         <div className="relative flex mb-10 justify-center items-center m-auto  group z-20 p-1 ">
           <Link
-            to="/annotator"
+            to="/select"
             className="relative z-10 bg-white text-black py-4 px-12 uppercase border-black border-2 flex items-center"
           >
             Continue <FontAwesomeIcon icon={faArrowRight} className="ml-2" />

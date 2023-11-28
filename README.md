@@ -1,70 +1,68 @@
-# Getting Started with Create React App
+# Annotator Project Setup Guide
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This document provides instructions for setting up the Annotator project on macOS and Windows. The Annotator project consists of a Python Flask backend and a React frontend.
 
-## Available Scripts
+## Prerequisites
 
-In the project directory, you can run:
+Before starting, ensure you have the following installed:
+- Python (3.7 or later)
+- Node.js (12.0 or later)
+- Git
+- PostgreSQL (optional, if using a local database)
 
-### `npm start`
+## Cloning the Repository
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+1. Open a terminal (macOS) or command prompt (Windows).
+2. Navigate to the desired directory where you want to clone the repository.
+3. Run:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Replace `<repository_url>` with the URL of the Git repository.
 
-### `npm test`
+## Setting Up the Backend
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### macOS and Linux
 
-### `npm run build`
+1. Navigate to the backend directory:
+2. Create a virtual environment:
+3. Activate the virtual environment:
+3. Activate the virtual environment:
+If `requirements.txt` is not available, install the necessary packages using `pip install`.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Windows
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Navigate to the backend directory:
+2. Create a virtual environment:
+3. Activate the virtual environment:
+4. Install the required Python packages:
+If `requirements.txt` is not available, install the necessary packages using `pip install`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Database Setup
 
-### `npm run eject`
+1. Ensure PostgreSQL is installed and running.
+2. Create a new database for the project (e.g., `annotator`).
+3. Update the `SQLALCHEMY_DATABASE_URI` in your Flask app configuration to reflect the new database credentials.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Setting Up the Frontend
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Navigate to the frontend directory:
+2. Install the necessary Node.js packages:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Running the Application
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Backend
 
-## Learn More
+1. Make sure the virtual environment is activated.
+2. Run the Flask application:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Frontend
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Open a new terminal or command prompt.
+2. Navigate to the frontend directory.
+3. Start the React application:
 
-### Code Splitting
+Your Annotator project should now be running with the backend on `http://localhost:5000` and the frontend on `http://localhost:3000`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Additional Notes
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Ensure that any environment-specific variables (like database credentials) are set appropriately in your environment or configuration files.
+- If you encounter any issues with package versions or dependencies, you might need to adjust the versions in `requirements.txt` (backend) or `package.json` (frontend) accordingly.
