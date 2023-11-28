@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
-import AnnotationForm from "../components/annotation/AnnotationForm";
+
 import PdfUpload from "../components/annotation/PdfUpload";
-import FileUploader from "../components/annotation/FileUploader";
+
 import PdfTextDisplay from "../components/annotation/PdfTextDisplay";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faSearch } from "@fortawesome/free-solid-svg-icons";
@@ -239,7 +239,7 @@ function FeaturesPage() {
           >
             Continue <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
           </Link>
-          <div className="absolute top-[12px] left-[630px] w-[13%] flex justify-center m-auto items-center self-center h-[90%] bg-black group-hover:bg-[#53F541] transition-colors"></div>
+          <div className="absolute top-[12px] left-[780px] w-[11%] flex justify-center m-auto items-center self-center h-[90%] bg-black group-hover:bg-[#53F541] transition-colors"></div>
         </div>
       </div>
 
