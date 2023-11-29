@@ -33,7 +33,7 @@ const Features = () => {
   return (
     <div className="bg-cover bg-center bg-no-repeat flex flex-col font-base items-center text-white justify-center min-h-screen bg-black" style={{ backgroundImage: `url('/bg3.jpg')` }}>
       {/* Headline */}
-      <h1 data-aos="fade-down" className="text-4xl font-bold mb-4 bg-white text-black p-2">MAIN FEATURES</h1>
+      <h1 data-aos="fade-down" className="text-4xl font-bold mb-4 mt-5 bg-white text-black p-2">MAIN FEATURES</h1>
       <h2 data-aos="fade-up" data-aos-delay="200" className='text-2xl font-bold mb-16 bg-white text-black p-2'>Everything you need</h2>
 
       {/* First Row - 3 Icons */}
@@ -44,7 +44,7 @@ const Features = () => {
       </div>
 
       {/* Second Row - 2 Icons */}
-      <div className="flex justify-center space-x-16 w-full max-w-4xl">
+      <div className="flex justify-center space-x-16 w-full mb-4 max-w-4xl">
         {createIcon(faArrowRight, "Customizable Annotations", "zoom-in", 600)}
         {createIcon(faArrowRight, "Multi-language Support", "zoom-in", 800)}
       </div>

@@ -231,7 +231,7 @@ function FeaturesPage() {
       <div className="z-10">
         <PdfUpload onUploadSuccess={handleUploadSuccess} />
 
-        <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} />
+        {/* <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} /> */}
         <div className="relative flex mb-10 justify-center items-center m-auto  group z-20 p-1 ">
           <Link
             to="/select"
@@ -239,7 +239,7 @@ function FeaturesPage() {
           >
             Continue <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
           </Link>
-          <div className="absolute top-[12px] left-[780px] w-[11%] flex justify-center m-auto items-center self-center h-[90%] bg-black group-hover:bg-[#53F541] transition-colors"></div>
+          <div className="absolute top-[12px] left-[600px] w-[14%] flex justify-center m-auto items-center self-center h-[90%] bg-black group-hover:bg-[#53F541] transition-colors"></div>
         </div>
       </div>
 
