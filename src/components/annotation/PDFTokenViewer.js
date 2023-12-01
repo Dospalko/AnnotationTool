@@ -9,7 +9,7 @@ function PDFTokenViewer(props) {
   const [selectedAnnotationId, setSelectedAnnotationId] = useState(null);
 
   useEffect(() => {
-    fetch(`/tokenize_pdf/${props.pdfTextId}`)
+    fetch(`http://localhost:5000/tokenize_pdf/${props.pdfTextId}`)
       .then(response => response.json())
       .then(data => setTokens(data))
       .catch(err => setError(err));
@@ -24,7 +24,7 @@ function PDFTokenViewer(props) {
   };
 
   const handleAssignAnnotation = (token_id, annotation_id) => {
-    axios.post('/assign_annotation', {
+    axios.post('http://localhost:5000/assign_annotation', {
       token_id,
       annotation_id
     })

@@ -2,12 +2,12 @@ import React from 'react';
 
 const HowItWorksCard = ({ title, step, content, icon }) => {
   return (
-    <div className="relative m-10 flex items-center justify-center">
+    <div className="relative m-10  flex items-center justify-center">
       {/* Background Card for 3D Effect */}
-      <div className="absolute flex items-center justify-center bg-[#F700C6] w-[400px] h-[400px] top-4 left-4 transform -rotate-2"></div>
+      <div className="absolute  flex items-center justify-center bg-[#F700C6] w-[350px] h-[400px] top-4 left-4 transform -rotate-2"></div>
 
       {/* Foreground Card */}
-      <div className="relative z-10 items-center justify-center bg-white w-[400px] h-[400px] shadow-xl flex flex-col p-6">
+      <div className="relative z-10 items-center justify-center bg-white w-[350px] h-[400px] shadow-xl flex flex-col p-6">
         {/* Headline */}
         <div className="mb-4">
           <h2 className="text-4xl font-bold border-b-5 text-green-500">{title}</h2>

@@ -12,7 +12,7 @@ const Annotator = () => {
 
   const fetchPdfTexts = async () => {
     try {
-      const res = await axios.get("/pdf_texts");
+      const res = await axios.get("http://localhost:5000/pdf_texts");
       setPdfTexts(res.data);
     } catch (error) {
       console.error("Failed to fetch PDF texts:", error);
@@ -21,7 +21,7 @@ const Annotator = () => {
 
   const deletePdfText = async (id) => {
     try {
-      await axios.delete(`/delete_pdf_text/${id}`);
+      await axios.delete(`http://localhost:5000/delete_pdf_text/${id}`);
       await fetchPdfTexts();
     } catch (error) {
       console.error("Failed to delete PDF text:", error);
@@ -35,7 +35,7 @@ const Annotator = () => {
   return (
     <div className="flex flex-col h-screen">
       <Header />
-  <main className="flex-grow">
+      <main className="flex-grow">
         <div className="flex">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <div className="w-full">
@@ -43,7 +43,6 @@ const Annotator = () => {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
