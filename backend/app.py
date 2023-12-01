@@ -161,6 +161,14 @@ def delete_pdf_text(pdf_text_id):
     
     return jsonify({"message": "PDF Text deleted."}), 200
 
+@app.route('/export_annotations/<int:pdf_text_id>', methods=['GET'])
+def export_annotations(pdf_text_id):
+    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id, Token.annotation_id != None).all()
+    annotations_data = [
+        {"token_id": token.id, "text": token.word, "annotation": token.annotation.text}
+        for token in tokens
+    ]
+    return jsonify(annotations_data)
 
 
 @app.route('/add', methods=['POST'])

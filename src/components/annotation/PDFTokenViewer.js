@@ -69,6 +69,21 @@ function PDFTokenViewer(props) {
       setError(err);
     }
   };
+  const handleExportAnnotations = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/export_annotations/${props.pdfTextId}`);
+      const data = response.data;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `annotations_${props.pdfTextId}.json`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err);
+    }
+  };
 
   const tokenElements = useMemo(() => tokens.map((token, index) => (
     <div key={`${token.word}-${index}`} className={`flex flex-col items-center m-1 p-1 bg-gray-200 rounded hover:bg-blue-200 transition-all duration-300 ease-in-out ${token.annotation ? 'animate-pulse' : ''}`}>
@@ -100,6 +115,9 @@ function PDFTokenViewer(props) {
         <button onClick={handleSaveTokens} className="mt-4 bg-blue-500 text-white p-2 rounded">
           Save Annotations
         </button>
+        <button onClick={handleExportAnnotations} className="mt-4 bg-green-500 text-white p-2 rounded">
+  Export Annotations
+</button>
         <div className="flex flex-wrap gap-2">{tokenElements}</div>
       </div>
     </div>
