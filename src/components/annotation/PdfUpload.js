@@ -16,7 +16,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
 
   const fetchPdfTexts = async () => {
     try {
-      const res = await axios.get("/pdf_texts");
+      const res = await axios.get("http://localhost:5000/pdf_texts");
       setPdfTexts(res.data);
     } catch (error) {
       console.error("Failed to fetch PDF texts:", error);
@@ -28,7 +28,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
     formData.append("file", selectedFile);
 
     try {
-      const response = await axios.post("/upload_pdf", formData, {
+      const response = await axios.post("http://localhost:5000/upload_pdf", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -49,7 +49,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
 
   const deletePdfText = async (id) => {
     try {
-      await axios.delete(`/delete_pdf_text/${id}`);
+      await axios.delete(`http://localhost:5000/delete_pdf_text/${id}`);
       if (selectedPdfText && selectedPdfText.id === id) {
         setSelectedPdfText(null);
       }

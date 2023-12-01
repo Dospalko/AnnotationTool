@@ -25,7 +25,7 @@ function FileUploader() {
     formData.append('file', selectedFile);
 
     axios
-      .post('/upload_txt', formData, {
+      .post('http://localhost:5000/upload_txt', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -59,7 +59,7 @@ function FileUploader() {
     const modifiedText = document.getElementById('modifiedText').innerHTML;
 
     axios
-      .post('/save_modified_text', {
+      .post('http://localhost:5000/save_modified_text', {
         modifiedText,
       })
       .then((response) => {
