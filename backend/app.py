@@ -104,19 +104,17 @@ def tokenize_pdf(pdf_text_id):
 @app.route('/save_tokens/<int:pdf_text_id>', methods=['POST'])
 def save_tokens(pdf_text_id):
     data = request.json
-    tokens = data.get('tokens', [])
+    updated_tokens = data.get('tokens', [])
 
-    # First, let's delete any existing tokens for this pdf_text_id
-    Token.query.filter_by(pdf_text_id=pdf_text_id).delete()
-
-    # Now, let's insert the new tokens
-    for word in tokens:
-        token = Token(word=word, pdf_text_id=pdf_text_id)
-        db.session.add(token)
-
+    # Process each token
+    for token_data in updated_tokens:
+        token = Token.query.get(token_data['id'])
+        if token:
+            token.annotation_id = token_data['annotation']['id'] if token_data['annotation'] else None
+            db.session.add(token)
+    
     db.session.commit()
-
-    return jsonify({"message": "Tokens saved successfully."}), 200
+    return jsonify({"message": "Tokens updated successfully."}), 200
 
 
 @app.route('/upload_pdf', methods=['POST'])
