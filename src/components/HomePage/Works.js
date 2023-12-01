@@ -16,7 +16,7 @@ const Works = () => {
   }, []);
 
   return (
-    <div className="bg-cover bg-no-repeat flex flex-col items-center font-base text-white justify-center min-h-screen bg-black" style={{ backgroundImage: `url('/mozno.png')` }}>
+    <div className="bg-cover bg-no-repeat flex flex-col items-center font-base text-white justify-center min-h-screen bg-black" style={{ backgroundImage: `url('/bg4.png')` }}>
       {/* Headline */}
       <div data-aos="fade-up" className="relative group p-1">
         <h1 className="relative z-10 bg-white text-4xl font-bold my-8 p-2 text-black py-4 px-12 uppercase border-black border-2">

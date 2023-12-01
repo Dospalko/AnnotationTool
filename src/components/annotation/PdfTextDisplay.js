@@ -25,6 +25,7 @@ const PdfTextDisplay = ({ pdfTexts, onDelete }) => {
       {pdfTexts.length > 0 && (
         <div className="flex items-center space-x-3">
           <label className="text-lg font-medium">Select PDF:</label>
+          
           <select
             className="border rounded-md p-2 shadow focus:border-blue-400 focus:ring focus:ring-blue-200 transition"
             onChange={handlePdfSelect}
