@@ -1,38 +1,58 @@
 from flask import Blueprint, jsonify, request
-from models.pdf_text import PdfText
+from models.pdf_text import PdfText  # Import the PdfText model here
+from models.token import Token
+from models.annotation import Annotation
+from extensions import db
+from nltk.tokenize import word_tokenize
+import re
+from PyPDF2 import PdfReader 
 
-pdf_texts_bp = Blueprint('pdf_texts', __name__)
 
-@app.route('/tokenize_pdf/<int:pdf_text_id>', methods=['GET'])
+pdf_routes = Blueprint('pdf_routes', __name__)
+@pdf_routes.route('/tokenize_pdf/<int:pdf_text_id>', methods=['GET'])
 def tokenize_pdf(pdf_text_id):
-    # 1. Retrieve the text for the given PDF ID
     pdf_text_record = PdfText.query.get_or_404(pdf_text_id)
-
-    # 2. Tokenize the text
     tokens = word_tokenize(pdf_text_record.text)
 
-    # 3. Return the tokens as a JSON response
-    return jsonify(tokens)
+    token_objects = []
+    for word in tokens:
+        token = Token.query.filter_by(word=word).first()
+        if not token:
+            token = Token(word=word, pdf_text_id=pdf_text_id)
+            db.session.add(token)
+            db.session.commit()
+        
+        annotation_data = None
+        if token.annotation_id:
+            annotation = Annotation.query.get(token.annotation_id)
+            annotation_data = {
+                'id': annotation.id,
+                'text': annotation.text,
+                'color': annotation.color
+            }
 
-@app.route('/save_tokens/<int:pdf_text_id>', methods=['POST'])
+        token_objects.append({'id': token.id, 'word': token.word, 'annotation': annotation_data})
+
+    return jsonify(token_objects)
+
+
+
+@pdf_routes.route('/save_tokens/<int:pdf_text_id>', methods=['POST'])
 def save_tokens(pdf_text_id):
     data = request.json
-    tokens = data.get('tokens', [])
+    updated_tokens = data.get('tokens', [])
 
-    # First, let's delete any existing tokens for this pdf_text_id
-    Token.query.filter_by(pdf_text_id=pdf_text_id).delete()
-
-    # Now, let's insert the new tokens
-    for word in tokens:
-        token = Token(word=word, pdf_text_id=pdf_text_id)
-        db.session.add(token)
-
+    # Process each token
+    for token_data in updated_tokens:
+        token = Token.query.get(token_data['id'])
+        if token:
+            token.annotation_id = token_data['annotation']['id'] if token_data['annotation'] else None
+            db.session.add(token)
+    
     db.session.commit()
+    return jsonify({"message": "Tokens updated successfully."}), 200
 
-    return jsonify({"message": "Tokens saved successfully."}), 200
-
-
-@app.route('/upload_pdf', methods=['POST'])
+@pdf_routes.route('/upload_pdf', methods=['POST'])
 def upload_pdf():
     uploaded_file = request.files.get('file')
     if uploaded_file and uploaded_file.filename.endswith('.pdf'):
@@ -54,13 +74,13 @@ def upload_pdf():
         return jsonify({"error": "Invalid file format."}), 400
 
 
-@app.route('/pdf_texts', methods=['GET'])
+@pdf_routes.route('/pdf_texts', methods=['GET'])
 def get_pdf_texts():
     pdf_texts = PdfText.query.all()
     output = [{'id': text.id, 'text': text.text, 'filename': text.filename} for text in pdf_texts]  # Include filename here
     return jsonify(output)
 
-@app.route('/delete_pdf_text/<int:pdf_text_id>', methods=['DELETE'])
+@pdf_routes.route('/delete_pdf_text/<int:pdf_text_id>', methods=['DELETE'])
 def delete_pdf_text(pdf_text_id):
     pdf_text = PdfText.query.get(pdf_text_id)
     
