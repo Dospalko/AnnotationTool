@@ -13,8 +13,8 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`h-screen bg-black text-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="flex justify-between items-center p-4 border-b border-gray-500">
+    <div className={`h-screen  text-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-[90%]'}`}>
+      <div className="flex justify-between  items-center p-4 border-b border-gray-500">
         <h2 className="text-xl font-semibold">Annotator</h2>
         <button
           onClick={toggleSidebar}

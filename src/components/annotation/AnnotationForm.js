@@ -82,7 +82,7 @@ const AnnotationForm = () => {
   }, []);
 
   return (
-    <div className="text-white w-max">
+    <div className="w-full font-base">
       <h1 className="text-xl font-bold mb-4">Manage Annotations</h1>
       <form onSubmit={addAnnotation}>
         <div className="mb-4 md:flex text-black gap-4 md:justify-between">
@@ -174,7 +174,7 @@ const AnnotationItem = ({
   return (
     <div
       style={{ backgroundColor: annotation.color }}
-      className="p-2 mb-2 flex justify-between items-center rounded shadow transition-transform duration-300 hover:scale-105"
+      className="p-2  mb-2 border-2 border-white bg-opacity-5 flex justify-between items-center rounded shadow transition-transform duration-300 hover:scale-105"
     >
       {isEditing ? (
         <>

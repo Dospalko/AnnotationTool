@@ -6,7 +6,13 @@ function PDFTokenViewer(props) {
   const [annotations, setAnnotations] = useState([]);
   const [error, setError] = useState(null);
   const [selectedTokenId, setSelectedTokenId] = useState(null);
+  const [exportFormat, setExportFormat] = useState('json');
+  const [exportStyle, setExportStyle] = useState('normal');
+  const [showExportModal, setShowExportModal] = useState(false);
 
+  const handleExportClick = () => {
+      setShowExportModal(true);
+  };
   useEffect(() => {
     fetchTokens();
     fetchAnnotations();
@@ -71,20 +77,29 @@ function PDFTokenViewer(props) {
   };
   const handleExportAnnotations = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/export_annotations/${props.pdfTextId}`);
+      let exportURL = `http://localhost:5000/export_annotations/${props.pdfTextId}`;
+      if (exportStyle === 'bio') {
+        exportURL = `http://localhost:5000/export_annotations_bio/${props.pdfTextId}`;
+      }
+
+      const response = await axios.get(exportURL);
       const data = response.data;
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `annotations_${props.pdfTextId}.json`;
+      link.download = `annotations_${props.pdfTextId}.${exportFormat}`;
       link.click();
       window.URL.revokeObjectURL(url);
+      setShowExportModal(false);
     } catch (err) {
       setError(err);
     }
   };
-
+  
+  const handleCloseModal = () => {
+      setShowExportModal(false);
+  };
   const tokenElements = useMemo(() => tokens.map((token, index) => (
     <div key={`${token.word}-${index}`} className={`flex flex-col items-center m-1 p-1 bg-gray-200 rounded hover:bg-blue-200 transition-all duration-300 ease-in-out ${token.annotation ? 'animate-pulse' : ''}`}>
       <span onClick={() => setSelectedTokenId(token.id)} className="cursor-pointer">
@@ -115,9 +130,33 @@ function PDFTokenViewer(props) {
         <button onClick={handleSaveTokens} className="mt-4 bg-blue-500 text-white p-2 rounded">
           Save Annotations
         </button>
-        <button onClick={handleExportAnnotations} className="mt-4 bg-green-500 text-white p-2 rounded">
-  Export Annotations
-</button>
+        <button onClick={handleExportClick} className="mt-4 bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
+                Export Annotations
+            </button>
+
+            {showExportModal && (
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg relative">
+                        <button onClick={handleCloseModal} className="absolute top-2 right-2 text-gray-600 hover:text-gray-800">
+                            <svg className="w-6 h-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <h2 className="text-xl font-bold mb-4">Export Options</h2>
+                        <select onChange={(e) => setExportFormat(e.target.value)} className="mb-4 p-2 border border-gray-300 rounded">
+                            <option value="json">JSON</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                        <select onChange={(e) => setExportStyle(e.target.value)} className="mb-4 p-2 border border-gray-300 rounded">
+                            <option value="normal">Normal</option>
+                            <option value="bio">BIO</option>
+                        </select>
+                        <button onClick={handleExportAnnotations} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
+                            Export
+                        </button>
+                    </div>
+                </div>
+            )}
         <div className="flex flex-wrap gap-2">{tokenElements}</div>
       </div>
     </div>

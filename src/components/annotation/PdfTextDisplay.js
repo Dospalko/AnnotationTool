@@ -37,7 +37,6 @@ const PdfTextDisplay = ({ pdfTexts, onDelete }) => {
           </select>
         </div>
       )}
-
       {selectedPdfText && (
         <div className="mt-5 border p-4 rounded">
           <button

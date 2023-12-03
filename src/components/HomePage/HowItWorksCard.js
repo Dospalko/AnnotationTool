@@ -21,7 +21,7 @@ const HowItWorksCard = ({ title, step, content, icon }) => {
         </div>
 
         {/* Icon */}
-        <div className="mt-4 text-5xl text-black">
+        <div className="mt-4 text-5xl text-green-500 font-bold">
           {icon}
         </div>
       </div>

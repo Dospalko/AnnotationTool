@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import HowItWorksCard from './HowItWorksCard'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload, faPencilAlt, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faUpload, faHighlighter,  faMagnifyingGlassMinus } from '@fortawesome/free-solid-svg-icons';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
@@ -34,19 +34,19 @@ const Works = () => {
           you want to work with. 
           Our platform supports multiple file formats 
           including .txt,.pdf"
-          icon={<FontAwesomeIcon icon={faArrowRight} />} 
+          icon={<FontAwesomeIcon icon={faUpload} />} 
         />
         <HowItWorksCard 
           title="ANNOTATE"
           step="Step 2: Annotate it!"
           content="Once your text is uploaded, the real fun begins. Utilize our intuitive and user-friendly annotation interface to highlight terms, phrases, or sentences. Choose from predefined tags or create your own to annotate the text exactly the way you want"
-          icon={<FontAwesomeIcon icon={faArrowRight} />} 
+          icon={<FontAwesomeIcon icon={faHighlighter} />} 
         />
         <HowItWorksCard 
           title="REVIEW"
           step="Step 3: Review it!"
           content="After you've completed the annotation, it's time to collect your hard work. Export your annotated text along with the tags in various formats like .csv, .json, or .xml for easy sharing and further analysis."
-          icon={<FontAwesomeIcon icon={faArrowRight} />} 
+          icon={<FontAwesomeIcon icon={faMagnifyingGlassMinus} />} 
         />
       </div>
       {/* Second Row - 1 Card */}
