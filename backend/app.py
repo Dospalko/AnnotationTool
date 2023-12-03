@@ -170,7 +170,30 @@ def export_annotations(pdf_text_id):
     ]
     return jsonify(annotations_data)
 
+@app.route('/export_annotations_bio/<int:pdf_text_id>', methods=['GET'])
+def export_annotations_bio(pdf_text_id):
+    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id, Token.annotation_id.isnot(None)).order_by(Token.id).all()
+    bio_data = []
+    previous_annotation_id = None
 
+    for token in tokens:
+        bio_tag = "O"
+        if token.annotation_id:
+            if token.annotation_id != previous_annotation_id:
+                bio_tag = f"B-{token.annotation.text}"  # Beginning of a new entity
+            else:
+                bio_tag = f"I-{token.annotation.text}"  # Inside an entity
+            previous_annotation_id = token.annotation_id
+        else:
+            previous_annotation_id = None
+
+        bio_data.append({'word': token.word, 'tag': bio_tag})
+
+    return jsonify(bio_data)
+
+
+
+    return jsonify(bio_data)
 @app.route('/add', methods=['POST'])
 def add_annotation():
     data = request.json
