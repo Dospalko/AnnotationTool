@@ -91,7 +91,7 @@ function PDFTokenViewer(props) {
         <span className="font-semibold">[Token {token.id}]:</span> {token.word}
       </span>
       {token.annotation && (
-        <span className="mt-1 text-xs" style={{ color: token.annotation.color }}>
+        <span className="mt-1 font-bold text-sm text-bold" style={{ color: token.annotation.color }}>
       {token.annotation.text}
         </span>
       )}
