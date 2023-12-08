@@ -13,8 +13,10 @@ function Header() {
     <header className="font-base bg-black border-white border-b-4 text-white py-4 px-6">
       <nav className="flex lg:flex-row text-2xl uppercase leading-6 flex-col shadow-2xl w-full">
         <div className="flex items-center justify-between w-full lg:w-full lg:justify-between">
+        <img src="/annotatorlog.jpg" alt="img" className="w-12 h-12 mx-4 object-cover rounded-full" />
+      
           <span className="bg-white px-2">
-            <h1 className="text-2xl  w-full font-semibold text-transparent bg-gradient-to-r bg-clip-text from-blue-500 to-purple-500 ">
+               <h1 className="text-2xl  w-full font-semibold text-transparent bg-gradient-to-r bg-clip-text from-blue-500 to-purple-500 ">
               Annotator
             </h1>
           </span>
@@ -54,17 +56,26 @@ function Header() {
                 className="text-white py-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
                 activeClassName="text-[#53F541]" // Active link style
               >
-                GET STARTED
+                ANNOTATE
               </NavLink>
             </li>
             <li>
+              <NavLink
+                to="/features"
+                className="text-white py-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
+                activeClassName="text-[#53F541]" // Active link style
+              >
+                FILES
+              </NavLink>
+            </li>
+            {/* <li>
               <a
                 href="/contact"
                 className="text-black bg-white p-2 hover:text-[#53F541] py-1 transition duration-300 block lg:inline-block"
               >
                 Login
               </a>
-            </li>
+            </li> */}
           </ul>
         </div>
       </nav>

@@ -4,10 +4,10 @@ import { Link } from "react-router-dom";
 const Card1 = () => {
   return (
     <Link to="/layoutlm-annotation" className="transform hover:scale-105 transition duration-300">
-      <div data-aos="fade-up" className="relative border-[#F700C6] border-8 border-dashed  bg-white rounded-xl shadow-lg flex text-center font-extrabold  transition-all duration-300 overflow-hidden">
+      <div data-aos="fade-up" className=" border-[#F700C6] border-8 border-dashed  bg-white rounded-xl shadow-lg flex text-center font-extrabold flex-  transition-all duration-300 overflow-hidden">
         
         {/* Image on the left */}
-        <div className="w-1/2 flex justify-center items-center bg-[#F7F7F7] ">
+        <div className="w-1/2 flex  justify-center items-center bg-[#F7F7F7] ">
           <img src="/automatic.png" alt="img" className="w-64 h-64 object-cover rounded-full" />
         </div>
 

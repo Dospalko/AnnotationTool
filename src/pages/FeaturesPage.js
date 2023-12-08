@@ -30,7 +30,7 @@ function FeaturesPage() {
 
   const fetchPdfTexts = async () => {
     try {
-      const res = await axios.get("/pdf_texts");
+      const res = await axios.get("localhost:5000/pdf_texts");
       setPdfTexts(res.data);
     } catch (error) {
       console.error("Failed to fetch PDF texts:", error);

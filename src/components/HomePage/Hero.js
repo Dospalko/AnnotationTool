@@ -22,9 +22,10 @@ const Hero = () => {
       style={{ backgroundImage: `url('/bg.png')` }}
     >
       <h1 data-aos="fade-down" className="text-6xl p-4 bg-black mb-4 mt-0">
-        Your go-to Annotation Tool <br /> for the Slovak Language
+        Your go-to Annotation Tool <br /> for the Slovak Language    
       </h1>
-
+   
+      
       <h2 data-aos="fade-up" data-aos-delay="200" className="text-3xl bg-black mb-8 p-4">
         Effortless manual annotation, accurate results.
       </h2>

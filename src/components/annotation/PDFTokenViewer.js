@@ -101,18 +101,37 @@ function PDFTokenViewer(props) {
       setShowExportModal(false);
   };
   const tokenElements = useMemo(() => tokens.map((token, index) => (
-    <div key={`${token.word}-${index}`} className={`flex flex-col items-center m-1 p-1 bg-gray-200 rounded hover:bg-blue-200 transition-all duration-300 ease-in-out ${token.annotation ? 'animate-pulse' : ''}`}>
-      <span onClick={() => setSelectedTokenId(token.id)} className="cursor-pointer">
-        <span className="font-semibold">[Token {token.id}]:</span> {token.word}
+    <div key={`${token.word}-${index}`} className="relative flex space-x-2">
+      <span 
+        className={`font-semibold cursor-pointer p-1 rounded ${token.annotation ? 'text-white' : 'text-gray-800'}`}
+        style={{ backgroundColor: token.annotation?.color }}
+        onClick={() => setSelectedTokenId(token.id)}
+      >
+        {token.word}
       </span>
       {token.annotation && (
-        <span className="mt-1 font-bold text-sm text-bold" style={{ color: token.annotation.color }}>
-      {token.annotation.text}
-        </span>
+        <div className="flex items-center justify-center">
+          <span
+            className="font-bold text-xs text-white p-2"
+            style={{ backgroundColor: token.annotation.color }}
+          >
+            {token.annotation.text}
+          </span>
+          <button
+            onClick={() => removeAnnotationFromToken(token.id)}
+            className=" bg-red-500 p-2 hover:bg-red-700 text-white text-xs"
+          >
+            X
+          </button>
+        </div>
       )}
       {selectedTokenId === token.id && (
-        <select onChange={(e) => handleAssignAnnotation(e, token.id)} className="mt-1">
-          <option value="">Assign Annotation</option>
+        <select 
+          onChange={(e) => handleAssignAnnotation(e, token.id)} 
+          className="flex justify-center items-center absolute transform -translate-y-full mr-10  cursor-pointer shadow-md"
+          defaultValue=""
+        >
+          <option value="" disabled hidden>Assign Annotation</option>
           <option value="-1" className="text-red-500">Remove Annotation</option>
           {annotations.map((annotation) => (
             <option key={annotation.id} value={annotation.id}>{annotation.text}</option>
@@ -120,19 +139,22 @@ function PDFTokenViewer(props) {
         </select>
       )}
     </div>
-  )), [tokens, annotations, selectedTokenId, handleAssignAnnotation]);
+  )), [tokens, annotations, selectedTokenId, handleAssignAnnotation, removeAnnotationFromToken]);
+  
 
   return (
-    <div>
+    <div className='font-base'>
       {error && <p className="text-red-500">{error.message}</p>}
-      <div className='mt-10 border-t-stone-700 border-black p-2' id="tokenContainer">
-        <h1 className="text-xl font-bold mb-2">TOKENIZED</h1>
-        <button onClick={handleSaveTokens} className="mt-4 bg-blue-500 text-white p-2 rounded">
+      <div className='border-t border-black p-2' id="tokenContainer">
+        <h1 className="text-2xl m-auto font-bold flex justify-center items-center bg-black w-max text-white  p-2 text-center my-4">TOKENIZED</h1>
+        <div className='flex justify-center m-auto items-center text-center mb-10'>
+        <button onClick={handleSaveTokens} className="my-8 bg-blue-500 text-white p-2 rounded">
           Save Annotations
         </button>
-        <button onClick={handleExportClick} className="mt-4 bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
+        <button onClick={handleExportClick} className="my-8 ml-4 gap-10 bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
                 Export Annotations
             </button>
+            </div>
 
             {showExportModal && (
                 <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
@@ -157,7 +179,8 @@ function PDFTokenViewer(props) {
                     </div>
                 </div>
             )}
-        <div className="flex flex-wrap gap-2">{tokenElements}</div>
+         <div className="flex flex-wrap gap-2 justify-start">{tokenElements}</div>
+   
       </div>
     </div>
   );
