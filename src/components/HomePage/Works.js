@@ -25,7 +25,7 @@ const Works = () => {
         <div className="absolute top-[50px] left-[12px] w-[98%] h-[50%] bg-black transition-colors"></div>
       </div>
       {/* First Row - 3 Cards */}
-      <div data-aos="zoom-in" className="flex w-full justify-around mb-4">
+      <div data-aos="zoom-in" className="flex w-full 2xl:flex-col justify-around mb-4">
         <HowItWorksCard 
           title="UPLOAD"
           step="Step 1: Upload it!"

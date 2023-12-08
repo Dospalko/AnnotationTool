@@ -15,7 +15,7 @@ const Chooser = () => {
   return (
     <div className="font-base bg-cover bg-black bg-left bg-repeat-x" style={{ backgroundImage: `url('/bgfg.svg')` }}>
       <Header />
-      <div className="flex flex-row mt-0 justify-center items-center h-screen ">
+      <div className="flex flex-row mt-0 justify-center items-center">
       {/* #  <Heading /> */}
         <div className="grid grid-flow-row auto-rows-max w-[50%] gap-12 p-8">
           <Card1 />
