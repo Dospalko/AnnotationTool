@@ -32,8 +32,8 @@ const Features = () => {
   }
 
   return (
-    <div className="bg-cover bg-center bg-no-repeat flex flex-col font-base items-center text-white justify-center min-h-screen bg-black"> 
-     {/* style={{ backgroundImage: `url('/bg3.jpg')` }} */}
+    <div className="bg-cover bg-center bg-no-repeat flex flex-col font-base items-center text-white justify-center min-h-screen"style={{ backgroundImage: `url('/bg3.jpg')` }} > 
+
       {/* Headline */}
       <div data-aos="fade-up" className="relative group p-1">
         <h1 className="relative z-10 bg-black text-4xl font-bold my-8 p-2 text-white py-4 px-12 uppercase border-white border-4">

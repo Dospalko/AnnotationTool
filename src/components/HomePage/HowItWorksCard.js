@@ -2,9 +2,9 @@ import React from 'react';
 
 const HowItWorksCard = ({ title, step, content, icon }) => {
   return (
-    <div className="relative m-10  flex items-center justify-center">
+    <div className="relative m-10 font-base flex items-center justify-center">
       {/* Background Card for 3D Effect */}
-      <div className="absolute  flex items-center justify-center bg-[#F700C6] w-[350px] h-[400px] top-4 left-4 transform -rotate-2"></div>
+      <div className="absolute   items-center justify-center bg-[#F700C6] hidden xl:flex w-[350px] h-[400px] top-4 left-4 transform -rotate-2"></div>
 
       {/* Foreground Card */}
       <div className="relative z-10 items-center justify-center bg-white w-[350px] h-[400px] shadow-xl flex flex-col p-6">
@@ -17,11 +17,11 @@ const HowItWorksCard = ({ title, step, content, icon }) => {
         {/* Step and Content */}
         <div className="flex-grow text-center items-center justify-center">
           <h3 className="font-bold bg-black p-2  mb-4">{step}</h3>
-          <p className="text-gray-600 text-md text-left">{content}</p>
+          <p className="text-black text-md text-left">{content}</p>
         </div>
 
         {/* Icon */}
-        <div className="mt-4 text-5xl text-green-500 font-bold">
+        <div className="mt-4 text-5xl text-black font-bold">
           {icon}
         </div>
       </div>

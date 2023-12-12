@@ -19,13 +19,13 @@ const Works = () => {
     <div className="bg-cover bg-no-repeat flex flex-col items-center font-base text-white justify-center min-h-screen bg-black" style={{ backgroundImage: `url('/bg4.png')` }}>
       {/* Headline */}
       <div data-aos="fade-up" className="relative group p-1">
-        <h1 className="relative z-10 bg-white text-4xl font-bold my-8 p-2 text-black py-4 px-12 uppercase border-black border-2">
+        <h1 className="relative z-10 bg-white text-4xl font-bold my-8 p-2  text-black py-4 px-12 uppercase border-black border-2">
           HOW IT WORKS?
         </h1>
         <div className="absolute top-[50px] left-[12px] w-[98%] h-[50%] bg-black transition-colors"></div>
       </div>
       {/* First Row - 3 Cards */}
-      <div data-aos="zoom-in" className="flex w-full 2xl:flex-col justify-around mb-4">
+      <div data-aos="zoom-in" className="flex  w-full xl:flex-row flex-col justify-around mb-4">
         <HowItWorksCard 
           title="UPLOAD"
           step="Step 1: Upload it!"

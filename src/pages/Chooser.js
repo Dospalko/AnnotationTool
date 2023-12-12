@@ -13,17 +13,20 @@ const Chooser = () => {
   }, []);
 
   return (
-    <div className="font-base bg-cover bg-black bg-left bg-repeat-x" style={{ backgroundImage: `url('/bgfg.svg')` }}>
-      <Header />
-      <div className="flex flex-row mt-0 justify-center items-center">
+    <section>  <Header />
+    <div className="font-base bg-cover h-screen bg-black bg-left bg-repeat-x" style={{ backgroundImage: `url('/bgfg.svg')` }}>
+    
+      <div className="flex flex-row my-auto m-auto justify-center items-center">
       {/* #  <Heading /> */}
-        <div className="grid grid-flow-row auto-rows-max w-[50%] gap-12 p-8">
+        <div className=" grid-flow-row hidden md:grid auto-rows-max w-max  xl:w-[50%] gap-12 p-8">
           <Card1 />
           <Card2 />
         </div>
       </div>
-      <Footer />
+    
     </div>
+      <Footer />
+      </section>
   );
 };
 

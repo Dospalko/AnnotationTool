@@ -180,7 +180,7 @@ function FeaturesPage() {
 
       <Header className="z-20 relative group" />
       {/* Heading */}
-      <div className="relative group p-1 mt-10 mx-auto w-full sm:w-2/3 md:w-1/2 lg:w-1/3">
+      <div className="relative group p-1 mt-10 mx-auto w-full  sm:w-2/3 md:w-1/2 lg:w-1/3">
         <h1 className="relative z-20 bg-white text-4xl font-bold mb-16 p-2 text-black flex items-center justify-center py-4 px-12 uppercase border-black border-2">
           FEATURES PAGE
         </h1>

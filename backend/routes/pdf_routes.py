@@ -9,6 +9,38 @@ from PyPDF2 import PdfReader
 
 
 pdf_routes = Blueprint('pdf_routes', __name__)
+
+@pdf_routes.route('/api/files-overview', methods=['GET'])
+def get_files_overview():
+    pdf_texts = PdfText.query.all()
+    overview_data = []
+
+    for pdf_text in pdf_texts:
+        tokens = Token.query.filter_by(pdf_text_id=pdf_text.id).all()
+        tokens_count = len(tokens)
+
+        # Count the number of tokens that are annotated
+        annotated_tokens_count = len([token for token in tokens if token.annotation_id])
+
+        # Get unique annotation IDs associated with these tokens
+        unique_annotation_ids = set(token.annotation_id for token in tokens if token.annotation_id)
+        unique_annotations_count = len(unique_annotation_ids)
+
+        # Calculate the percentage of tokens that are annotated
+        annotated_percentage = (annotated_tokens_count / tokens_count * 100) if tokens_count > 0 else 0
+
+        overview_data.append({
+            'id': pdf_text.id,
+            'filename': pdf_text.filename,
+            'tokensCount': tokens_count,
+            'annotatedTokensCount': annotated_tokens_count,
+            'uniqueAnnotationsCount': unique_annotations_count,
+            'annotatedPercentage': round(annotated_percentage, 2)
+        })
+
+    return jsonify(overview_data)
+
+
 @pdf_routes.route('/tokenize_pdf/<int:pdf_text_id>', methods=['GET'])
 def tokenize_pdf(pdf_text_id):
     pdf_text_record = PdfText.query.get_or_404(pdf_text_id)

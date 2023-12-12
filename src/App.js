@@ -8,6 +8,7 @@ import Chooser from "./pages/Chooser";
 import LayoutLM from "./pages/LayoutLM";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import FilesOverviewPage from "./pages/FilesOverviewPage";
 
 AOS.init({
   duration: 1200,
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/annotator" element={<PageLoader><Annotator /></PageLoader>} />
         <Route path="/select" element={<PageLoader><Chooser /></PageLoader>} />
         <Route path="/layoutlm-annotation" element={<PageLoader><LayoutLM /></PageLoader>} />
+        <Route path="/files" element={<PageLoader><FilesOverviewPage /></PageLoader>} />
       </Routes>
     </Router>
   );
