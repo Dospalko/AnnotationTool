@@ -4,9 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { faUikit } from '@fortawesome/free-brands-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 const Features = () => {
-    
+  const { t } = useTranslation();
   useEffect(() => {
     AOS.init({
       duration: 1200,
@@ -26,7 +27,7 @@ const Features = () => {
           <FontAwesomeIcon className='text-black w-8 h-8' icon={iconName} />
           </div>
         </div>
-        <div className="mt-2 text-lg">{labelText}</div>
+        <div className="mt-2 text-lg">{t(`${labelText}`)}</div>
       </div>
     );
   }
@@ -37,27 +38,27 @@ const Features = () => {
       {/* Headline */}
       <div data-aos="fade-up" className="relative group p-1">
         <h1 className="relative z-10 bg-black text-4xl font-bold my-8 p-2 text-white py-4 px-12 uppercase border-white border-4">
-         Main features
+        {t('mainFeatures')}
         </h1>
         <div className="absolute top-[50px] left-[12px] w-[98%] h-[50%] border-black border-4 bg-green-500 transition-colors"></div>
       </div>
       <div data-aos="fade-up" className="relative group p-1">
         <h1 className="relative z-10 bg-black text-xl font-bold my-4  p-2 text-white py-4 px-12 uppercase border-white border-4">
-         Everything you need!
+         {t('everythingYouNeed')}
         </h1>
         <div className="absolute top-[35px] left-[12px] w-[98%] h-[60%] border-black border-4 bg-green-500 transition-colors"></div>
       </div>
       {/* First Row - 3 Icons */}
       <div className="flex justify-center space-x-16 mb-10 w-full max-w-6xl">
-        {createIcon(faUikit, "User-Friendly Interface", "zoom-in", 0)}
-        {createIcon(faFileImport, "Multiple types of import", "zoom-in", 200)}
-        {createIcon(faDownload, "Multiple types of export", "zoom-in", 400)}
+        {createIcon(faUikit, "userFriendlyInterface", "zoom-in", 0)}
+        {createIcon(faFileImport, "multipleTypesOfImport", "zoom-in", 200)}
+        {createIcon(faDownload, "multipleTypesOfExport", "zoom-in", 400)}
       </div>
 
       {/* Second Row - 2 Icons */}
       <div className="flex justify-center space-x-16 w-full mb-4 max-w-4xl">
-        {createIcon(faHighlighter, "Customizable Annotations", "zoom-in", 600)}
-        {createIcon(faLanguage, "Multi-language Support", "zoom-in", 800)}
+        {createIcon(faHighlighter, "customizableAnnotations", "zoom-in", 600)}
+        {createIcon(faLanguage, "multiLanguageSupport", "zoom-in", 800)}
       </div>
     </div>
   );

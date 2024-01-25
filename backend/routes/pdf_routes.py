@@ -44,16 +44,22 @@ def get_files_overview():
 @pdf_routes.route('/tokenize_pdf/<int:pdf_text_id>', methods=['GET'])
 def tokenize_pdf(pdf_text_id):
     pdf_text_record = PdfText.query.get_or_404(pdf_text_id)
-    tokens = word_tokenize(pdf_text_record.text)
+    text = pdf_text_record.text
+    tokens = word_tokenize(text)
 
     token_objects = []
+    index = 0
     for word in tokens:
-        token = Token.query.filter_by(word=word).first()
+        start = text.find(word, index)  # Find the start index of the word
+        end = start + len(word)  # Calculate the end index of the word
+        index = end  # Update the current index
+
+        token = Token.query.filter_by(word=word, start=start, end=end).first()
         if not token:
-            token = Token(word=word, pdf_text_id=pdf_text_id)
+            token = Token(word=word, start=start, end=end, pdf_text_id=pdf_text_id)
             db.session.add(token)
             db.session.commit()
-        
+
         annotation_data = None
         if token.annotation_id:
             annotation = Annotation.query.get(token.annotation_id)
@@ -63,7 +69,13 @@ def tokenize_pdf(pdf_text_id):
                 'color': annotation.color
             }
 
-        token_objects.append({'id': token.id, 'word': token.word, 'annotation': annotation_data})
+        token_objects.append({
+            'id': token.id, 
+            'word': token.word, 
+            'start': token.start, 
+            'end': token.end, 
+            'annotation': annotation_data
+        })
 
     return jsonify(token_objects)
 

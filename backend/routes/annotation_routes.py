@@ -39,12 +39,36 @@ def assign_annotation():
 
 @annotation_routes.route('/export_annotations/<int:pdf_text_id>', methods=['GET'])
 def export_annotations(pdf_text_id):
-    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id, Token.annotation_id != None).all()
-    annotations_data = [
-        {"token_id": token.id, "text": token.word, "annotation": token.annotation.text}
-        for token in tokens
-    ]
-    return jsonify(annotations_data)
+    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id, Token.annotation_id.isnot(None)).order_by(Token.id).all()
+    annotations_data = []
+    previous_annotation_id = None
+    annotation = None
+
+    for token in tokens:
+        if token.annotation_id != previous_annotation_id:
+            if annotation:  # If there's a previous annotation, add it to the list
+                annotations_data.append(annotation)
+            # Start a new annotation
+            annotation = {
+                "text_id": f"text{pdf_text_id}",
+                "annotations": [
+                    {
+                        "label": token.word,
+                        "start": token.start,  # Assuming the token has a start attribute
+                        "end": token.end  # Assuming the token has an end attribute
+                    }
+                ]
+            }
+            previous_annotation_id = token.annotation_id
+        else:
+            # If the token is part of the current annotation, update the end index
+            annotation["annotations"][-1]["end"] = token.end
+
+    # Add the last annotation
+    if annotation:
+        annotations_data.append(annotation)
+
+    return jsonify({"annotations": annotations_data})
 
 @annotation_routes.route('/export_annotations_bio/<int:pdf_text_id>', methods=['GET'])
 def export_annotations_bio(pdf_text_id):
@@ -54,16 +78,23 @@ def export_annotations_bio(pdf_text_id):
 
     for token in tokens:
         bio_tag = "O"
+        annotation_type = None
+        annotation_id = None
         if token.annotation_id:
+            annotation_type = token.annotation.text
+            annotation_id = token.annotation_id
             if token.annotation_id != previous_annotation_id:
-                bio_tag = f"B-{token.annotation.text}"  # Beginning of a new entity
+                bio_tag = f"B-{annotation_type}"  # Beginning of a new entity
             else:
-                bio_tag = f"I-{token.annotation.text}"  # Inside an entity
+                bio_tag = f"I-{annotation_type}"  # Inside an entity
             previous_annotation_id = token.annotation_id
-        else:
-            previous_annotation_id = None
 
-        bio_data.append({'word': token.word, 'tag': bio_tag})
+        bio_data.append({
+            'word': token.word, 
+            'tag': bio_tag, 
+            'annotation_id': annotation_id, 
+            'annotation_type': annotation_type
+        })
 
     return jsonify(bio_data)
 

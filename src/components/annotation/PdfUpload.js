@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import PdfTextDisplay from "./PdfTextDisplay";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -28,11 +28,15 @@ const PdfUpload = ({ onUploadSuccess }) => {
     formData.append("file", selectedFile);
 
     try {
-      const response = await axios.post("http://localhost:5000/upload_pdf", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        "http://localhost:5000/upload_pdf",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       // Po úspešnom nahratí pridajte nový súbor do zoznamu pdfTexts
       setPdfTexts((prevPdfTexts) => [...prevPdfTexts, response.data]);
@@ -64,35 +68,45 @@ const PdfUpload = ({ onUploadSuccess }) => {
   }, []);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
-
-  const getFileIcon = (filename) => {
-    const fileExtension = filename.split(".").pop();
-
-    switch (fileExtension) {
+  
+  const handleDelete = useCallback((id) => {
+    deletePdfText(id);
+  }, [deletePdfText]);
+  
+  const getFileIcon = (fileType) => {
+    switch (fileType) {
       case "pdf":
         return faFilePdf;
       case "docx":
         return faFileWord;
-      case "txt":
-        return faFileAlt;
       default:
-        return faFileAlt; // Výchozí ikona pro ostatní typy souborů
+        return faFileAlt; // Default icon for other file types
     }
   };
-
-  const cancelUpload = (event) => {
+  const TableHeader = ({ children }) => (
+    <th className="w-1/3 z-10 border-b border-[#F700C6] bg-[#F700C6] text-left px-4 py-2 text-black uppercase tracking-wider">
+      <span className="bg-black text-white p-2">{children}</span>
+    </th>
+  );
+  const cancelUpload = useCallback((event) => {
     event.stopPropagation(); // Stops the click event from reaching the parent div
     setSelectedFile(null);
     setIsUploading(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = null;
     }
-  };
-  const enhancedUploadPdf = async () => {
+  }, [setSelectedFile, setIsUploading, fileInputRef]);
+  
+  const enhancedUploadPdf = useCallback(async () => {
     setIsUploading(true);
-    await uploadPdf();
-    setIsUploading(false);
-  };
+    try {
+      await uploadPdf();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [setIsUploading, uploadPdf]);
   return (
     <div className="p-10 m-auto text-white">
       <div className="flex flex-col">
@@ -114,15 +128,14 @@ const PdfUpload = ({ onUploadSuccess }) => {
                 >
                   x
                 </button>
-              
-          <button
-            onClick={enhancedUploadPdf}
-            disabled={!selectedFile || isUploading}
-            className="mt-5 px-6 z-20 py-2 bg-green-500 text-white rounded shadow-lg hover:bg-green-600"
-          >
-            {isUploading ? "Uploading..." : "Upload"}
-          </button>
-       
+
+                <button
+                  onClick={enhancedUploadPdf}
+                  disabled={!selectedFile || isUploading}
+                  className="mt-5 px-6 z-20 py-2 bg-green-500 text-white rounded shadow-lg hover:bg-green-600"
+                >
+                  {isUploading ? "Uploading..." : "Upload"}
+                </button>
               </div>
             ) : (
               <div className="flex flex-col mt-10 items-center self-center w-full justify-center py-10 z-10">
@@ -142,36 +155,31 @@ const PdfUpload = ({ onUploadSuccess }) => {
                 {/* Pevná výška pro 3 soubory a povolený vertikální posun */}
                 <table className="min-w-full  bg-black text-white z-10">
                   <thead className=" bg-[#F700C6]">
-                    <tr className="my-10">
-                      <th className="w-1/3 z-10    border-b border-[#F700C6] bg-[#F700C6]   py-2 text-black uppercase tracking-wider">
-                        
-                        <span className="bg-black my-4 text-white p-2">Icon</span>
-                      </th>
-                      <th className="w-1/3 z-10 border-b border-[#F700C6] bg-[#F700C6] text-left px-4 py-2 text-black uppercase tracking-wider">
-                        <span className="bg-black text-white p-2">Filename</span>
-                      </th>
-                      <th className="w-1/3 z-10 border-b border-[#F700C6] bg-[#F700C6] text-left px-4 py-2 text-black uppercase tracking-wider">
-                        <span className="bg-black text-white p-2 mt-10">Actions</span>
-                      </th>
+                    <tr>
+                      <TableHeader>Icon</TableHeader>
+                      <TableHeader>Filename</TableHeader>
+                      <TableHeader>Actions</TableHeader>
                     </tr>
                   </thead>
                   <tbody>
-                    {pdfTexts.map((text) => (
-                      <tr key={text.id} className="text-white border-b-2 border-dashed">
-                        <td className="w-1/3 m-auto mt-4 items-center text-center justify-center align-middle  flex  py-3">
+                    {pdfTexts.map(({ id, filename }) => (
+                      <tr
+                        key={id}
+                        className="text-white border-b-2 border-dashed"
+                      >
+                        <td className="w-1/3 m-auto mt-4 items-center text-center justify-center align-middle flex py-3">
                           <FontAwesomeIcon
                             icon={faFilePdf}
                             className="text-4xl"
                           />
                         </td>
                         <td className="w-1/3 text-left py-3 px-4">
-                          {text.filename}
-                        </td>{" "}
-                        {/* Zmenili sme z text.id na text.filename */}
+                          {filename}
+                        </td>
                         <td className="w-1/3 text-left py-3 px-4">
                           <button
                             className="px-4 py-2 bg-red-500 text-white rounded"
-                            onClick={() => deletePdfText(text.id)}
+                            onClick={() => handleDelete(id)}
                           >
                             Delete
                           </button>
@@ -185,7 +193,6 @@ const PdfUpload = ({ onUploadSuccess }) => {
             <div className="absolute top-[10px] left-[30px] w-[95%] h-[100%] bg-[#1AFF15] lg:block hidden transition-colors"></div>
           </div>
         </div>
-       
       </div>
     </div>
   );

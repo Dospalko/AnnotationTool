@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi"; // Import icons from react-icons
 import { NavLink } from "react-router-dom";
+import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -67,6 +68,9 @@ function Header() {
               >
                 FILES
               </NavLink>
+            </li>
+            <li>
+              <LanguageSwitcher/>
             </li>
             {/* <li>
               <a

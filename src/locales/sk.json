@@ -1,0 +1,23 @@
+{
+  "heroTitle": "Váš hlavný nástroj na anotáciu pre slovenský jazyk",
+  "heroSubtitle": "Jednoduchá manuálna anotácia, presné výsledky.",
+  "getStarted": "Začnite",
+  "github": "GitHub",
+  "mainFeatures": "Hlavné funkcie",
+  "everythingYouNeed": "Všetko, čo potrebujete!",
+  "userFriendlyInterface": "Používateľsky príjemné UI",
+  "multipleTypesOfImport": "Viaceré typy importu",
+  "multipleTypesOfExport": "Viaceré typy exportu",
+  "customizableAnnotations": "Prispôsobiteľné anotácie",
+  "multiLanguageSupport": "Podpora viacerých jazykov",
+  "upload": "Nahrať",
+  "annotate": "Anotovať",
+  "review": "Skontrolovať",
+  "howItWorks": "Ako to funguje?",
+  "upload1": "Krok 1: Nahrajte to!",
+  "upload2":"Začnite svoju cestu anotácie jednoduchým nahraním textu, s ktorým chcete pracovať. Naša platforma podporuje viacero formátov súborov vrátane .txt, .pdf",
+  "annotate1": "Krok 2: Anotujte to!",
+  "annotate2": "Akonáhle je váš text nahraný, začína skutočná zábava. Využite náš intuitívny a používateľsky príjemný rozhranie pre anotáciu. Vyberte si z preddefinovaných značiek alebo vytvorte vlastné, aby ste text anotovali presne tak, ako chcete",
+  "review1":"Krok 3: Skontrolujte to!",
+  "review2":  "Po dokončení anotácie je čas zbierať vašu tvrdú prácu. Exportujte svoj anotovaný text spolu so značkami v rôznych formátoch ako .csv, .json alebo .xml pre ľahké zdieľanie a ďalšiu analýzu."
+}
