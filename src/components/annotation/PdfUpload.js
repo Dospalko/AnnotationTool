@@ -29,7 +29,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/upload_pdf",
+        "http://localhost:5000/upload_file",
         formData,
         {
           headers: {
@@ -68,35 +68,46 @@ const PdfUpload = ({ onUploadSuccess }) => {
   }, []);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+
+  const handleDelete = useCallback(
+    (id) => {
+      deletePdfText(id);
+    },
+    [deletePdfText]
+  );
+
+  const getFileIcon = (filename) => {
+    const fileExtension = filename.split('.').pop().toLowerCase();
   
-  const handleDelete = useCallback((id) => {
-    deletePdfText(id);
-  }, [deletePdfText]);
-  
-  const getFileIcon = (fileType) => {
-    switch (fileType) {
+    switch (fileExtension) {
       case "pdf":
         return faFilePdf;
       case "docx":
         return faFileWord;
+      case "txt":
+        return faFileAlt;
       default:
         return faFileAlt; // Default icon for other file types
     }
   };
+  
   const TableHeader = ({ children }) => (
     <th className="w-1/3 z-10 border-b border-[#F700C6] bg-[#F700C6] text-left px-4 py-2 text-black uppercase tracking-wider">
       <span className="bg-black text-white p-2">{children}</span>
     </th>
   );
-  const cancelUpload = useCallback((event) => {
-    event.stopPropagation(); // Stops the click event from reaching the parent div
-    setSelectedFile(null);
-    setIsUploading(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = null;
-    }
-  }, [setSelectedFile, setIsUploading, fileInputRef]);
-  
+  const cancelUpload = useCallback(
+    (event) => {
+      event.stopPropagation(); // Stops the click event from reaching the parent div
+      setSelectedFile(null);
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = null;
+      }
+    },
+    [setSelectedFile, setIsUploading, fileInputRef]
+  );
+
   const enhancedUploadPdf = useCallback(async () => {
     setIsUploading(true);
     try {
@@ -114,7 +125,7 @@ const PdfUpload = ({ onUploadSuccess }) => {
           <div className="mt-5 border-dashed border-4 w-1/3  border-white  relative">
             <input
               type="file"
-              accept=".pdf"
+              accept=".pdf,.docx,.txt"
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0"
               onChange={(e) => setSelectedFile(e.target.files[0])}
               ref={fileInputRef}

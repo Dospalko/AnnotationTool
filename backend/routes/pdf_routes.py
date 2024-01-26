@@ -6,9 +6,38 @@ from extensions import db
 from nltk.tokenize import word_tokenize
 import re
 from PyPDF2 import PdfReader 
-
-
+from docx import Document
+import os
 pdf_routes = Blueprint('pdf_routes', __name__)
+
+@pdf_routes.route('/upload_file', methods=['POST'])
+def upload_file():
+    uploaded_file = request.files.get('file')
+    if uploaded_file:
+        filename = uploaded_file.filename
+        file_extension = os.path.splitext(filename)[1]
+        text = ''
+
+        if file_extension == '.pdf':
+            pdf_reader = PdfReader(uploaded_file.stream)
+            text = ' '.join(page.extract_text() for page in pdf_reader.pages if page.extract_text())
+
+        elif file_extension == '.docx':
+            doc = Document(uploaded_file.stream)
+            text = ' '.join(p.text for p in doc.paragraphs)
+
+        elif file_extension == '.txt':
+            text = uploaded_file.stream.read().decode('utf-8')
+
+        else:
+            return jsonify({"error": "Invalid file format."}), 400
+
+        text = re.sub(r'\s+', ' ', text).strip()
+        new_pdf_text = PdfText(text, filename)
+        db.session.add(new_pdf_text)
+        db.session.commit()
+
+        return jsonify({"message": "File uploaded and text extracted."}), 201
 
 @pdf_routes.route('/api/files-overview', methods=['GET'])
 def get_files_overview():
@@ -140,3 +169,7 @@ def delete_pdf_text(pdf_text_id):
     
     return jsonify({"message": "PDF Text deleted."}), 200
 
+@pdf_routes.route('/get_tokenized_text/<int:pdf_text_id>', methods=['GET'])
+def get_tokenized_text(pdf_text_id):
+    tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
+    return jsonify([token.word for token in tokens])

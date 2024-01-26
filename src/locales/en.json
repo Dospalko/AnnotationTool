@@ -19,5 +19,8 @@
   "annotate1": "Step 2: Annotate it!",
   "annotate2": "Once your text is uploaded, the real fun begins. Utilize our intuitive and user-friendly annotation interface to highlight terms, phrases, or sentences. Choose from predefined tags or create your own to annotate the text exactly the way you want",
   "review1": "Step 3: Review it!",
-  "review2": "After you've completed the annotation, it's time to collect your hard work. Export your annotated text along with the tags in various formats like .csv, .json, or .xml for easy sharing and further analysis."
+  "review2": "After you've completed the annotation, it's time to collect your hard work. Export your annotated text along with the tags in various formats like .csv, .json, or .xml for easy sharing and further analysis.",
+  "Annotate" : "Annotate",
+  "home": "Home",
+  "files": "Files"
 }

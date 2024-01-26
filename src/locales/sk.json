@@ -19,5 +19,8 @@
   "annotate1": "Krok 2: Anotujte to!",
   "annotate2": "Akonáhle je váš text nahraný, začína skutočná zábava. Využite náš intuitívny a používateľsky príjemný rozhranie pre anotáciu. Vyberte si z preddefinovaných značiek alebo vytvorte vlastné, aby ste text anotovali presne tak, ako chcete",
   "review1":"Krok 3: Skontrolujte to!",
-  "review2":  "Po dokončení anotácie je čas zbierať vašu tvrdú prácu. Exportujte svoj anotovaný text spolu so značkami v rôznych formátoch ako .csv, .json alebo .xml pre ľahké zdieľanie a ďalšiu analýzu."
+  "review2":  "Po dokončení anotácie je čas zbierať vašu tvrdú prácu. Exportujte svoj anotovaný text spolu so značkami v rôznych formátoch ako .csv, .json alebo .xml pre ľahké zdieľanie a ďalšiu analýzu.",
+  "Annotate" : "Annotuj",
+  "home": "Domov",
+  "files": "Subory"
 }

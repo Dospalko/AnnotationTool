@@ -9,20 +9,24 @@ function PDFTokenViewer(props) {
   const [exportFormat, setExportFormat] = useState('json');
   const [exportStyle, setExportStyle] = useState('normal');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [isTokensLoaded, setIsTokensLoaded] = useState(false);
+  const [isAnnotationsLoaded, setIsAnnotationsLoaded] = useState(false);
 
-  const handleExportClick = () => {
-      setShowExportModal(true);
-  };
   useEffect(() => {
-    fetchTokens();
-    fetchAnnotations();
-  }, [props.pdfTextId]);
+    if (!isTokensLoaded) {
+      fetchTokens();
+    }
+    if (!isAnnotationsLoaded) {
+      fetchAnnotations();
+    }
+  }, [props.pdfTextId, isTokensLoaded, isAnnotationsLoaded]);
 
   const fetchTokens = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:5000/tokenize_pdf/${props.pdfTextId}`);
       const data = await response.json();
       setTokens(data);
+      setIsTokensLoaded(true);
     } catch (err) {
       setError(err);
     }
@@ -32,11 +36,11 @@ function PDFTokenViewer(props) {
     try {
       const res = await axios.get('http://localhost:5000/annotations');
       setAnnotations(res.data);
+      setIsAnnotationsLoaded(true);
     } catch (err) {
       setError(err);
     }
   };
-
   const handleAssignAnnotation = useCallback((e, tokenId) => {
     const annotationId = parseInt(e.target.value);
     if (annotationId === -1) {
@@ -46,6 +50,9 @@ function PDFTokenViewer(props) {
     }
   }, [tokens, annotations]);
 
+  const handleExportClick = () => {
+    setShowExportModal(true);
+};
   const assignAnnotationToToken = (tokenId, annotationId) => {
     const updatedTokens = tokens.map(token => {
       if (token.id === tokenId) {
@@ -55,6 +62,7 @@ function PDFTokenViewer(props) {
       return token;
     });
     setTokens(updatedTokens);
+    handleSaveTokens();
   };
 
   const removeAnnotationFromToken = (tokenId) => {
@@ -64,7 +72,7 @@ function PDFTokenViewer(props) {
       }
       return token;
     });
-    setTokens(updatedTokens);
+
   };
 
   const handleSaveTokens = async () => {

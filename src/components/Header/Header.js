@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi"; // Import icons from react-icons
 import { NavLink } from "react-router-dom";
 import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -9,13 +10,13 @@ function Header() {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
-
+  const { t } = useTranslation();
   return (
     <header className="font-base bg-black border-white border-b-4 text-white py-4 px-6">
       <nav className="flex lg:flex-row text-2xl uppercase leading-6 flex-col shadow-2xl w-full">
         <div className="flex items-center justify-between w-full lg:w-full lg:justify-between">
         <img src="/annotatorlog.jpg" alt="img" className="w-12 h-12 mx-4 object-cover rounded-full" />
-      
+
           <span className="bg-white px-2">
                <h1 className="text-2xl  w-full font-semibold text-transparent bg-gradient-to-r bg-clip-text from-blue-500 to-purple-500 ">
               Annotator
@@ -48,7 +49,7 @@ function Header() {
                 className="text-white py-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
                 activeClassName="text-black"
               >
-                Home
+                {t('home')}
               </NavLink>
             </li>
             <li>
@@ -57,7 +58,7 @@ function Header() {
                 className="text-white py-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
                 activeClassName="text-[#53F541]" // Active link style
               >
-                ANNOTATE
+                  {t('Annotate')}
               </NavLink>
             </li>
             <li>
@@ -66,7 +67,7 @@ function Header() {
                 className="text-white py-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
                 activeClassName="text-[#53F541]" // Active link style
               >
-                FILES
+                  {t('files')}
               </NavLink>
             </li>
             <li>
