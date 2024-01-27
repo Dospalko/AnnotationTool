@@ -115,15 +115,22 @@ def save_tokens(pdf_text_id):
     data = request.json
     updated_tokens = data.get('tokens', [])
 
+    # Extract token IDs
+    token_ids = [token_data['id'] for token_data in updated_tokens]
+
+    # Fetch all relevant tokens in a single query
+    tokens = Token.query.filter(Token.id.in_(token_ids)).all()
+    token_dict = {token.id: token for token in tokens}
+
     # Process each token
     for token_data in updated_tokens:
-        token = Token.query.get(token_data['id'])
+        token = token_dict.get(token_data['id'])
         if token:
-            token.annotation_id = token_data['annotation']['id'] if token_data['annotation'] else None
-            db.session.add(token)
-    
+            token.annotation_id = token_data['annotation']['id'] if token_data.get('annotation') else None
+
     db.session.commit()
     return jsonify({"message": "Tokens updated successfully."}), 200
+
 
 @pdf_routes.route('/upload_pdf', methods=['POST'])
 def upload_pdf():
