@@ -19,28 +19,26 @@ annotation_routes = Blueprint('annotation_routes', __name__)
 def assign_annotation():
     try:
         data = request.json
-        token_id = data.get('token_id')
+        token_ids = data.get('token_ids')  # Expecting a list of token IDs
         annotation_id = data.get('annotation_id')
 
-        if not token_id or not annotation_id:
-            return jsonify({"error": "Token ID or Annotation ID is missing"}), 400
+        if not token_ids or not annotation_id:
+            return jsonify({"error": "Token IDs or Annotation ID is missing"}), 400
 
-        token = Token.query.get(token_id)
-        if not token:
-            return jsonify({"error": "Token not found"}), 404
+        # Assign the annotation to each token
+        for token_id in token_ids:
+            token = Token.query.get(token_id)
+            if token:
+                token.annotation_id = annotation_id
+            else:
+                return jsonify({"error": f"Token with ID {token_id} not found"}), 404
 
-        annotation = Annotation.query.get(annotation_id)
-        if not annotation:
-            return jsonify({"error": "Annotation not found"}), 404
-
-        token.annotation_id = annotation_id
         db.session.commit()
-
-        return jsonify({"message": "Annotation assigned to token successfully."}), 200
+        return jsonify({"message": "Annotation assigned to tokens successfully."}), 200
     except Exception as e:
-        # Log the exception for debugging
         print(f"Error: {e}")
         return jsonify({"error": "An internal error occurred"}), 500
+
 
 
 @annotation_routes.route('/export_annotations/<int:pdf_text_id>', methods=['GET'])

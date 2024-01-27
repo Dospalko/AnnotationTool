@@ -69,11 +69,24 @@ def get_files_overview():
 
     return jsonify(overview_data)
 
-
 @pdf_routes.route('/tokenize_pdf/<int:pdf_text_id>', methods=['GET'])
 def tokenize_pdf(pdf_text_id):
     pdf_text_record = PdfText.query.get_or_404(pdf_text_id)
     text = pdf_text_record.text
+
+    # If the PDF has already been tokenized, fetch the tokens from the database
+    tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
+    if tokens:
+        sorted_tokens = sorted(tokens, key=lambda token: token.start)
+        return jsonify([{
+            'id': token.id, 
+            'word': token.word, 
+            'start': token.start, 
+            'end': token.end, 
+            'annotation': token.annotation.to_dict() if token.annotation else None
+        } for token in sorted_tokens])
+
+    # Otherwise, tokenize the PDF text
     tokens = word_tokenize(text)
 
     token_objects = []
@@ -83,32 +96,21 @@ def tokenize_pdf(pdf_text_id):
         end = start + len(word)  # Calculate the end index of the word
         index = end  # Update the current index
 
-        token = Token.query.filter_by(word=word, start=start, end=end).first()
-        if not token:
-            token = Token(word=word, start=start, end=end, pdf_text_id=pdf_text_id)
-            db.session.add(token)
-            db.session.commit()
-
-        annotation_data = None
-        if token.annotation_id:
-            annotation = Annotation.query.get(token.annotation_id)
-            annotation_data = {
-                'id': annotation.id,
-                'text': annotation.text,
-                'color': annotation.color
-            }
+        token = Token(word=word, start=start, end=end, pdf_text_id=pdf_text_id)
+        db.session.add(token)
+        db.session.commit()
 
         token_objects.append({
             'id': token.id, 
-            'word': token.word, 
-            'start': token.start, 
-            'end': token.end, 
-            'annotation': annotation_data
+            'word': token.word,
+            'start': token.start,
+            'end': token.end,
+            'annotation': token.annotation.to_dict() if token.annotation else None
         })
 
-    return jsonify(token_objects)
-
-
+    # Sort the tokens by their start index before returning them
+    sorted_token_objects = sorted(token_objects, key=lambda token: token['start'])
+    return jsonify(sorted_token_objects)
 
 @pdf_routes.route('/save_tokens/<int:pdf_text_id>', methods=['POST'])
 def save_tokens(pdf_text_id):

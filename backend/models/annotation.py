@@ -9,3 +9,11 @@ class Annotation(db.Model):
     def __init__(self, text, color):
         self.text = text
         self.color = color
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'text': self.text,
+            'color': self.color,
+            'favorite': self.favorite
+        }
