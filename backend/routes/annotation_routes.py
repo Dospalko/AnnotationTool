@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, Response
 from models.pdf_text import PdfText  # Import the PdfText model here
 from models.token import Token
 from models.annotation import Annotation
+from models.relation import Relation
 from extensions import db
 from nltk.tokenize import word_tokenize
 import re
@@ -239,3 +240,23 @@ def get_non_favorite_annotations():
     non_favorites = [{"id": ann.id, "text": ann.text, "color": ann.color,
                       "favorite": ann.favorite} for ann in non_favorite_annotations]
     return jsonify(non_favorites)
+
+@annotation_routes.route('/relations', methods=['POST'])
+def create_relation():
+    data = request.json
+    source_token_id = data.get('source_token_id')
+    target_token_id = data.get('target_token_id')
+    relation_type = data.get('relation_type')
+
+    if not all([source_token_id, target_token_id, relation_type]):
+        return jsonify({"error": "Missing data for creating a relation"}), 400
+
+    new_relation = Relation(source_token_id=source_token_id, target_token_id=target_token_id, relation_type=relation_type)
+    db.session.add(new_relation)
+    db.session.commit()
+    return jsonify(new_relation.to_dict()), 201
+
+@annotation_routes.route('/relations', methods=['GET'])
+def get_relations():
+    relations = Relation.query.all()
+    return jsonify([relation.to_dict() for relation in relations]), 200
