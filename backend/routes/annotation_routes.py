@@ -47,32 +47,34 @@ def export_annotations(pdf_text_id):
     tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id,
                                 Token.annotation_id.isnot(None)).order_by(Token.id).all()
     annotations_data = []
-    previous_annotation_id = None
     annotation = None
+    label_words = []  # To accumulate words for a single annotation
 
     for token in tokens:
-        if token.annotation_id != previous_annotation_id:
-            if annotation:  # If there's a previous annotation, add it to the list
+        if annotation is None or token.annotation_id != annotation['annotation_id']:
+            if annotation:
+                annotation['annotations'][0]['label'] = ' '.join(label_words)
                 annotations_data.append(annotation)
             annotation = {
                 "text_id": f"text{pdf_text_id}",
-                "filename": token.pdf_text_id,  # Assuming you can access filename like this
-                "annotations": [
-                    {
-                        "label": token.word,
-                        "type": token.annotation.text,  # Type of the annotation
-                        "start": token.start,
-                        "end": token.end
-                    }
-                ]
+                "filename": token.pdf_text_id,
+                "annotations": [{
+                    "label": token.word,  # Initially set to the first word; will be updated
+                    "type": token.annotation.text,
+                    "start": token.start,
+                    "end": token.end
+                }],
+                "annotation_id": token.annotation_id  # Keep track of the current annotation_id
             }
-            previous_annotation_id = token.annotation_id
+            label_words = [token.word]  # Reset label_words with the current token's word
         else:
-            # Update the end index of the current annotation
-            annotation["annotations"][-1]["end"] = token.end
+            # Append current word to label_words and update the end of the annotation
+            label_words.append(token.word)
+            annotation['annotations'][0]['end'] = token.end
 
     # Add the last annotation
     if annotation:
+        annotation['annotations'][0]['label'] = ' '.join(label_words)
         annotations_data.append(annotation)
 
     return jsonify({"annotations": annotations_data})

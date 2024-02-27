@@ -16,15 +16,15 @@ const LanguageSwitcher = () => {
     <div className="flex justify-center gap-4">
       <button
         onClick={() => changeLanguage('en')}
-        className={`  flex items-center  ${activeLang === 'en' ? ' bg-blue-500 text-white' : ' text-gray-700'}`}
+        className={`  flex items-cente p-2  ${activeLang === 'en' ? ' bg-white text-black' : ' text-gray-700'}`}
       >
-        <FontAwesomeIcon icon={faGlobeAmericas} className="" />
+        EN
       </button>
       <button
         onClick={() => changeLanguage('sk')}
-        className={` flex items-center ${activeLang === 'sk' ? ' bg-blue-500 text-white' : ' text-gray-700'}`}
+        className={` flex items-center p-2 ${activeLang === 'sk' ? ' bg-white text-black' : ' text-gray-700'}`}
       >
-        <FontAwesomeIcon icon={faGlobeEurope} className="" />
+        SK
       </button>
     </div>
   );

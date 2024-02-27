@@ -1,56 +1,52 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import axios from "axios";
+import ExportAnnotationsButton from "./ExportAnnotationsButton";
 
 function PDFTokenViewer(props) {
   const [tokens, setTokens] = useState([]);
   const [annotations, setAnnotations] = useState([]);
+  const [showAnnotationModal, setShowAnnotationModal] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedTokenId, setSelectedTokenId] = useState(null);
-  const [exportFormat, setExportFormat] = useState("json");
-  const [exportStyle, setExportStyle] = useState("normal");
-  const [showExportModal, setShowExportModal] = useState(false);
+  const [currentSelection, setCurrentSelection] = useState(new Set());
+  const dragStart = useRef(false);
   const [isTokensLoaded, setIsTokensLoaded] = useState(false);
   const [isAnnotationsLoaded, setIsAnnotationsLoaded] = useState(false);
 
   const autoSaveInterval = 5000;
 
-  const fetchTokens = useCallback(async () => {
-    try {
-      const response = await fetch(`http://localhost:5000/tokenize_pdf/${props.pdfTextId}`);
-      const data = await response.json();
-      setTokens(data);
-      setIsTokensLoaded(true);
-    } catch (err) {
-      setError(err);
-    }
+  useEffect(() => {
+    const fetchTokensAndAnnotations = async () => {
+      try {
+        const tokenResponse = await axios.get(
+          `http://localhost:5000/tokenize_pdf/${props.pdfTextId}`
+        );
+        setTokens(tokenResponse.data);
+        const annotationResponse = await axios.get(
+          "http://localhost:5000/annotations"
+        );
+        setAnnotations(annotationResponse.data);
+      } catch (error) {
+        setError(error);
+      }
+    };
+    fetchTokensAndAnnotations();
   }, [props.pdfTextId]);
-
-  const fetchAnnotations = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/annotations");
-      setAnnotations(res.data);
-      setIsAnnotationsLoaded(true);
-    } catch (err) {
-      setError(err);
-    }
-  };
 
   const handleSaveTokens = useCallback(async () => {
     try {
-      await axios.post(`http://localhost:5000/save_tokens/${props.pdfTextId}`, { tokens });
+      await axios.post(`http://localhost:5000/save_tokens/${props.pdfTextId}`, {
+        tokens,
+      });
     } catch (err) {
       setError(err);
     }
   }, [tokens, props.pdfTextId]);
-
-  useEffect(() => {
-    if (!isTokensLoaded) {
-      fetchTokens();
-    }
-    if (!isAnnotationsLoaded) {
-      fetchAnnotations();
-    }
-  }, [props.pdfTextId, isTokensLoaded, isAnnotationsLoaded, fetchTokens]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,129 +55,147 @@ function PDFTokenViewer(props) {
     return () => clearInterval(interval);
   }, [handleSaveTokens]);
 
-  const assignAnnotationToToken = useCallback((tokenId, annotationId) => {
-    const updatedTokens = tokens.map(token => {
-      if (token.id === tokenId) {
-        const annotation = annotations.find(ann => ann.id === annotationId);
-        return { ...token, annotation };
-      }
-      return token;
-    });
-    setTokens(updatedTokens);
-  }, [tokens, annotations]);
+  const handleDragStart = (tokenId) => {
+    dragStart.current = true;
+    selectedTokens.current.clear();
+    selectedTokens.current.add(tokenId);
+    setCurrentSelection(new Set(selectedTokens.current));
+  };
 
-  const removeAnnotationFromToken = useCallback((tokenId) => {
-    const updatedTokens = tokens.map(token => {
-      if (token.id === tokenId) {
+  const handleTokenMouseEnter = (tokenId) => {
+    if (dragStart.current) {
+      selectedTokens.current.add(tokenId);
+      setCurrentSelection(new Set(selectedTokens.current));
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (dragStart.current && selectedTokens.current.size > 0) {
+      setShowAnnotationModal(true);
+    }
+    dragStart.current = false;
+    // Once selection is done, clear current selection visual indication
+    setCurrentSelection(new Set());
+  };
+
+  const assignAnnotationToSelectedTokens = useCallback(
+    (annotationId) => {
+      const updatedTokens = tokens.map((token) => {
+        if (selectedTokens.current.has(token.id)) {
+          const annotation = annotations.find((ann) => ann.id === annotationId);
+          return { ...token, annotation };
+        }
+        return token;
+      });
+      setTokens(updatedTokens);
+      selectedTokens.current.clear();
+      setShowAnnotationModal(false);
+    },
+    [tokens, annotations]
+  );
+
+  const AnnotationModal = () => (
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
+      <div className="bg-white p-4 rounded-lg shadow-xl">
+        <h2 className="text-lg font-semibold mb-4">Manage Annotations</h2>
+        <div className="flex flex-col space-y-2">
+          {/* Existing annotation buttons */}
+          {annotations.map((annotation) => (
+            <button
+              key={annotation.id}
+              className="px-4 py-2 rounded border border-gray-300 shadow-sm hover:bg-gray-100"
+              onClick={() => assignAnnotationToSelectedTokens(annotation.id)}
+            >
+              {annotation.text}
+            </button>
+          ))}
+          {/* Button for removing annotations from all selected tokens */}
+          {selectedTokens.current.size > 0 && (
+            <button
+              className="mt-4 px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+              onClick={removeAnnotationsFromSelectedTokens}
+            >
+              Remove Annotations from Selected Tokens
+            </button>
+          )}
+          <button
+            className="mt-4 px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
+            onClick={() => setShowAnnotationModal(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const removeAnnotationsFromSelectedTokens = useCallback(() => {
+    const updatedTokens = tokens.map((token) => {
+      if (selectedTokens.current.has(token.id)) {
         return { ...token, annotation: null };
       }
       return token;
     });
     setTokens(updatedTokens);
+    setShowAnnotationModal(false); // Hide the modal after removing annotations
   }, [tokens]);
 
-  const handleAssignAnnotation = useCallback((e, tokenId) => {
-    const annotationId = parseInt(e.target.value);
-    if (annotationId === -1) {
-      removeAnnotationFromToken(tokenId);
-    } else {
-      assignAnnotationToToken(tokenId, annotationId);
-    }
-  }, [assignAnnotationToToken, removeAnnotationFromToken]);
+  const selectedTokens = useRef(new Set());
 
-  const handleExportClick = () => {
-    setShowExportModal(true);
-  };
-
-  const handleExportAnnotations = async () => {
-    try {
-      let exportURL = `http://localhost:5000/export_annotations/${props.pdfTextId}`;
-      if (exportStyle === "bio") {
-        exportURL = `http://localhost:5000/export_annotations_bio/${props.pdfTextId}?format=${exportFormat}`;
-      }
-      const response = await axios.get(exportURL);
-      const data = response.data;
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `annotations_${props.pdfTextId}.${exportFormat}`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-      setShowExportModal(false);
-    } catch (err) {
-      setError(err);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setShowExportModal(false);
-  };
-
-  const tokenElements = useMemo(() => tokens.map((token, index) => (
-    <div key={`${token.word}-${index}`} className="relative flex space-x-2">
-      <span className={`font-semibold cursor-pointer p-1 rounded ${token.annotation ? "text-white" : "text-gray-800"}`}
-            style={{ backgroundColor: token.annotation?.color }}
-            onClick={() => setSelectedTokenId(token.id)}>
+  const tokenElements = useMemo(() => tokens.map((token, index) => {
+    const isSelected = currentSelection.has(token.id);
+    // Determine if this token is the last in the current selection
+    const isLastSelected = isSelected && [...currentSelection].sort((a, b) => a - b).indexOf(token.id) === currentSelection.size - 1;
+    
+    return (
+      <span key={`${token.word}-${index}`}
+            className={`inline-block cursor-pointer px-1 py-0.5 m-0.5 rounded ${isSelected ? "bg-blue-200" : "bg-gray-100"} hover:bg-blue-300`}
+            onMouseDown={() => handleDragStart(token.id)}
+            onMouseEnter={() => handleTokenMouseEnter(token.id)}
+            onMouseUp={handleDragEnd}
+            style={{ 
+              backgroundColor: token.annotation ? `rgba(${hexToRgb(token.annotation.color)}, 0.5)` : '', // Set background color with 50% opacity
+              border: isSelected ? '2px solid red' : '', // Add a border for selected tokens
+            }}>
         {token.word}
+        {token.annotation && <span className="text-xs text-white m-2 p-1" style={{ backgroundColor: token.annotation.color }}>({token.annotation.text})</span>}
+        {isLastSelected && <span className="text-xs"> (Add Text)</span>} {/* Add additional text to the last token */}
       </span>
-      {token.annotation && (
-        <div className="flex items-center justify-center">
-          <span className="font-bold text-xs text-white p-2"
-                style={{ backgroundColor: token.annotation.color }}>
-            {token.annotation.text}
-          </span>
-          <button onClick={() => removeAnnotationFromToken(token.id)}
-                  className=" bg-red-500 p-2 hover:bg-red-700 text-white text-xs">
-            X
-          </button>
-        </div>
-      )}
-      {selectedTokenId === token.id && (
-        <select onChange={(e) => handleAssignAnnotation(e, token.id)}
-                className="flex justify-center items-center absolute transform -translate-y-full mr-10  cursor-pointer shadow-md"
-                defaultValue="">
-          <option value="" disabled hidden>Assign Annotation</option>
-          <option value="-1" className="text-red-500">Remove Annotation</option>
-          {annotations.map(annotation => (
-            <option key={annotation.id} value={annotation.id}>{annotation.text}</option>
-          ))}
-        </select>
-      )}
-    </div>
-  )), [tokens, annotations, selectedTokenId, handleAssignAnnotation, removeAnnotationFromToken]);
+    );
+  }), [tokens, currentSelection]);
+  
+  // Function to convert hex color to RGB format
+  function hexToRgb(hex) {
+    // Remove '#' from the beginning of the hex color
+    hex = hex.replace(/^#/, '');
+  
+    // Parse the hex color to obtain RGB components
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+  
+    // Return the RGB values as a string
+    return `${r}, ${g}, ${b}`;
+  }
+  
+  
 
   return (
-    <div className="font-base">
-      {error && <p className="text-red-500">{error.message}</p>}
-      <div className="border-t border-black p-2" id="tokenContainer">
-        <h1 className="text-2xl m-auto font-bold flex justify-center items-center bg-black w-max text-white  p-2 text-center my-4">TOKENIZED</h1>
-        <div className="flex justify-center m-auto items-center text-center mb-10">
-          <button onClick={handleSaveTokens} className="my-8 bg-blue-500 text-white p-2 rounded">Save Annotations</button>
-          <button onClick={handleExportClick} className="my-8 ml-4 gap-10 bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">Export Annotations</button>
-        </div>
-        {showExportModal && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg relative">
-              <button onClick={handleCloseModal} className="absolute top-2 right-2 text-gray-600 hover:text-gray-800">
-                <svg className="w-6 h-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12"></path></svg>
-              </button>
-              <h2 className="text-xl font-bold mb-4">Export Options</h2>
-              <select onChange={(e) => setExportFormat(e.target.value)} className="mb-4 p-2 border border-gray-300 rounded">
-                <option value="json">JSON</option>
-                <option value="csv">CSV</option>
-                <option value="xml">XML</option>
-              </select>
-              <select onChange={(e) => setExportStyle(e.target.value)} className="mb-4 p-2 border border-gray-300 rounded">
-                <option value="normal">Normal</option>
-                <option value="bio">BIO</option>
-              </select>
-              <button onClick={handleExportAnnotations} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">Export</button>
-            </div>
-          </div>
-        )}
-        <div className="flex flex-wrap gap-2 justify-start">{tokenElements}</div>
+    <div onMouseLeave={handleDragEnd}>
+      {error && <p className="text-red-500">Error: {error.message}</p>}
+      <div className="flex justify-center m-auto items-center text-center mb-10">
+        <button
+          onClick={handleSaveTokens}
+          className="my-8 bg-blue-500 text-white p-2 rounded"
+        >
+          Save Annotations
+        </button>
+        <ExportAnnotationsButton pdfTextId={props.pdfTextId} />
       </div>
+
+      <div className="flex flex-wrap">{tokenElements}</div>
+      {showAnnotationModal && <AnnotationModal />}
     </div>
   );
 }

@@ -46,7 +46,7 @@ function Header() {
             <li>
               <NavLink
                 to="/"
-                className="text-white py-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
+                className="text-white py-1 mt-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
                 activeClassName="text-black"
               >
                 {t('home')}
@@ -55,7 +55,7 @@ function Header() {
             <li>
               <NavLink
                 to="/features"
-                className="text-white py-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
+                className="text-white py-1 mt-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
                 activeClassName="text-[#53F541]" // Active link style
               >
                   {t('Annotate')}
@@ -64,7 +64,7 @@ function Header() {
             <li>
               <NavLink
                 to="/files"
-                className="text-white py-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
+                className="text-white py-1 mt-1 hover:text-[#53F541] transition duration-300 block lg:inline-block"
                 activeClassName="text-[#53F541]" // Active link style
               >
                   {t('files')}
