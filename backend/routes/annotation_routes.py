@@ -12,9 +12,58 @@ from dicttoxml import dicttoxml
 from io import StringIO
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import Element, SubElement, tostring
-
+from transformers import pipeline
 annotation_routes = Blueprint('annotation_routes', __name__)
 
+
+ner_map = {0: '0', 1: 'B-OSOBA', 2: 'I-OSOBA', 3: 'B-ORGANIZÁCIA', 4: 'I-ORGANIZÁCIA', 5: 'B-LOKALITA', 6: 'I-LOKALITA'}
+
+def annotate_texts_with_ner(pdf_text_id):
+    # Initialize the NER pipeline with your preferred model
+    ner_pipeline = pipeline('ner', model='crabz/slovakbert-ner')
+
+    # Access the specific PdfText from the database
+    pdf_text = PdfText.query.get(pdf_text_id)
+    if not pdf_text:
+        return "PDF text not found", 404
+
+    print(f"Annotating text from PDF ID: {pdf_text.id}, Filename: {pdf_text.filename}")
+    
+    # Perform NER
+    annotations = ner_pipeline(pdf_text.text)
+    
+    # Process annotations
+    for annotation in annotations:
+        entity_type_id = annotation['entity']  # Directly use the integer value
+
+        # Look up the corresponding string label in ner_map
+        if entity_type_id in ner_map:
+            entity_label = ner_map[entity_type_id]
+            if entity_label != '0':  # Assuming '0' signifies an uninteresting entity type
+                existing_annotation = Annotation.query.filter_by(text=entity_label).first()
+                if not existing_annotation:
+                    # Create a new Annotation for this entity label
+                    new_annotation = Annotation(text=entity_label, color="#000000")  # Assign color dynamically if needed
+                    db.session.add(new_annotation)
+                    db.session.flush()  # Flush to get the new annotation ID for the token
+                    annotation_id = new_annotation.id
+                else:
+                    annotation_id = existing_annotation.id
+
+                entity_text = pdf_text.text[annotation['start']:annotation['end']]
+                new_token = Token(word=entity_text, start=annotation['start'], end=annotation['end'], pdf_text_id=pdf_text.id, annotation_id=annotation_id)
+                db.session.add(new_token)
+
+    db.session.commit()
+    return "Automated annotations added successfully.", 200
+
+
+@annotation_routes.route('/automate_annotation/<int:pdf_text_id>', methods=['POST'])
+def automate_annotation(pdf_text_id):
+    message, status = annotate_texts_with_ner(pdf_text_id)
+    if status == 404:
+        return jsonify({"error": message}), 404
+    return jsonify({"message": "Automated annotations added successfully."}), 200
 
 @annotation_routes.route('/assign_annotation', methods=['POST'])
 def assign_annotation():
