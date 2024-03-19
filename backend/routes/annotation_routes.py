@@ -17,53 +17,77 @@ annotation_routes = Blueprint('annotation_routes', __name__)
 
 
 ner_map = {0: '0', 1: 'B-OSOBA', 2: 'I-OSOBA', 3: 'B-ORGANIZÁCIA', 4: 'I-ORGANIZÁCIA', 5: 'B-LOKALITA', 6: 'I-LOKALITA'}
-
+entity_color_map = {
+    'B-OSOBA': '#FF5733',  # Example: red
+    'I-OSOBA': '#FF5733',  # Same type, same color
+    'B-ORGANIZÁCIA': '#33FF57',  # Example: green
+    'I-ORGANIZÁCIA': '#33FF57',  # Same type, same color
+    'B-LOKALITA': '#3357FF',  # Example: blue
+    'I-LOKALITA': '#3357FF',  # Same type, same color
+    # Add other types as needed
+}
 def annotate_texts_with_ner(pdf_text_id):
-    # Initialize the NER pipeline with your preferred model
     ner_pipeline = pipeline('ner', model='crabz/slovakbert-ner')
-
-    # Access the specific PdfText from the database
     pdf_text = PdfText.query.get(pdf_text_id)
     if not pdf_text:
         return "PDF text not found", 404
 
-    print(f"Annotating text from PDF ID: {pdf_text.id}, Filename: {pdf_text.filename}")
-    
-    # Perform NER
-    annotations = ner_pipeline(pdf_text.text)
-    
-    # Process annotations
-    for annotation in annotations:
-        entity_type_id = annotation['entity']  # Directly use the integer value
+    # Get NER annotations
+    ner_annotations = ner_pipeline(pdf_text.text)
 
-        # Look up the corresponding string label in ner_map
-        if entity_type_id in ner_map:
-            entity_label = ner_map[entity_type_id]
-            if entity_label != '0':  # Assuming '0' signifies an uninteresting entity type
-                existing_annotation = Annotation.query.filter_by(text=entity_label).first()
-                if not existing_annotation:
-                    # Create a new Annotation for this entity label
-                    new_annotation = Annotation(text=entity_label, color="#000000")  # Assign color dynamically if needed
-                    db.session.add(new_annotation)
-                    db.session.flush()  # Flush to get the new annotation ID for the token
-                    annotation_id = new_annotation.id
-                else:
-                    annotation_id = existing_annotation.id
+    # Sort annotations by start index for sequential processing
+    ner_annotations_sorted = sorted(ner_annotations, key=lambda ann: ann['start'])
 
-                entity_text = pdf_text.text[annotation['start']:annotation['end']]
-                new_token = Token(word=entity_text, start=annotation['start'], end=annotation['end'], pdf_text_id=pdf_text.id, annotation_id=annotation_id)
-                db.session.add(new_token)
+    # Convert NER results to a set of start-end tuples for quick lookup
+    annotated_spans = {(ann['start'], ann['end']): ner_map.get(ann['entity'], '0') for ann in ner_annotations_sorted}
+
+    last_index = 0
+    for start, end in annotated_spans:
+        # Handle text before the current entity
+        if start > last_index:
+            create_tokens_for_intermediate_text(pdf_text.text[last_index:start], last_index, pdf_text.id, None)
+
+        # Handle the entity itself
+        entity_label = annotated_spans[(start, end)]
+        color = entity_color_map.get(entity_label, None)  # Get the color for the entity type
+        annotation_id = None
+        if entity_label != '0':  # '0' means no entity
+            # Find or create the annotation in the database
+            annotation = Annotation.query.filter_by(text=entity_label).first()
+            if not annotation:
+                annotation = Annotation(text=entity_label, color=color)
+                db.session.add(annotation)
+                db.session.flush()  # This will assign an ID to the new annotation
+            annotation_id = annotation.id
+
+        # Add the token for the current entity
+        token_text = pdf_text.text[start:end]
+        create_token(token_text, start, end, pdf_text.id, annotation_id)
+
+        # Update the last index
+        last_index = end
+
+    # Handle any text after the last annotation
+    if last_index < len(pdf_text.text):
+        create_tokens_for_intermediate_text(pdf_text.text[last_index:], last_index, pdf_text.id, None)
 
     db.session.commit()
-    return "Automated annotations added successfully.", 200
+    return "Tokenization and annotation completed successfully.", 200
 
+def create_tokens_for_intermediate_text(text, offset, pdf_text_id, annotation_id):
+    # Create tokens for intermediate non-entity text
+    intermediate_tokens = text.split()  # Naive split by whitespace
+    index = offset
+    for word in intermediate_tokens:
+        start = index + text[index-offset:].find(word)
+        end = start + len(word)
+        create_token(word, start, end, pdf_text_id, annotation_id)
+        index = end + 1  # Skip over the space after the word
 
-@annotation_routes.route('/automate_annotation/<int:pdf_text_id>', methods=['POST'])
-def automate_annotation(pdf_text_id):
-    message, status = annotate_texts_with_ner(pdf_text_id)
-    if status == 404:
-        return jsonify({"error": message}), 404
-    return jsonify({"message": "Automated annotations added successfully."}), 200
+def create_token(word, start, end, pdf_text_id, annotation_id):
+    new_token = Token(word=word, start=start, end=end, pdf_text_id=pdf_text_id, annotation_id=annotation_id)
+    db.session.add(new_token)
+
 
 @annotation_routes.route('/assign_annotation', methods=['POST'])
 def assign_annotation():
