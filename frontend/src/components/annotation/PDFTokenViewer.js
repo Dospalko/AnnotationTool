@@ -10,7 +10,7 @@ import ExportAnnotationsButton from "./ExportAnnotationsButton";
 import { useTranslation } from "react-i18next";
 
 function PDFTokenViewer(props) {
-  const { t } = useTranslation();
+  const t = useTranslation().t;
   const [tokens, setTokens] = useState([]);
   const [annotations, setAnnotations] = useState([]);
   const [showAnnotationModal, setShowAnnotationModal] = useState(false);

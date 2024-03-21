@@ -14,6 +14,7 @@
     "aos": "^2.3.4",
     "axios": "^1.5.1",
     "gapi-client": "^0.0.3",
+    "gapi-script": "^1.2.0",
     "http-proxy-middleware": "^2.0.6",
     "i18next": "^23.7.19",
     "konva": "^9.3.2",
