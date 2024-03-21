@@ -66,3 +66,4 @@ Your Annotator project should now be running with the backend on `http://localho
 
 - Ensure that any environment-specific variables (like database credentials) are set appropriately in your environment or configuration files.
 - If you encounter any issues with package versions or dependencies, you might need to adjust the versions in `requirements.txt` (backend) or `package.json` (frontend) accordingly.
+chmod +x ../backend/start_backend.sh
