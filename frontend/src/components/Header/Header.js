@@ -17,7 +17,7 @@ function Header() {
         <div className="flex items-center justify-between w-full lg:w-full lg:justify-between">
         <img src="/annotatorlog.jpg" alt="img" className="w-12 h-12 mx-4 object-cover rounded-full" />
 
-          <span className="bg-white px-2">
+          <span className=" px-2">
                <h1 className="text-2xl  w-full font-semibold text-transparent bg-gradient-to-r bg-clip-text from-blue-500 to-purple-500 ">
               Annotator
             </h1>

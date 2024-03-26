@@ -1,28 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PDFTokenViewer from "./PDFTokenViewer";
 import { ThreeDots } from 'react-loader-spinner';
 import { useTranslation } from "react-i18next";
 
 const PdfTextDisplay = ({ pdfTexts, onDelete }) => {
-  const [selectedPdfText, setSelectedPdfText] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [showText, setShowText] = useState(false);
   const [showTokenizedText, setShowTokenizedText] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // General loading state
+  const [loadingTokens, setLoadingTokens] = useState(false); // Specific loading state for tokenization
   const [highlightMode, setHighlightMode] = useState(false);
   const [highlightedTexts, setHighlightedTexts] = useState([]);
 
-  const handlePdfSelect = async (e) => {
-    const selectedText = pdfTexts.find(text => text.id === parseInt(e.target.value));
-    setSelectedPdfText(selectedText);
+  useEffect(() => {
     setShowText(false);
     setShowTokenizedText(false);
+  }, [selectedIndex]);
+
+  const handleNext = () => {
+    if (selectedIndex < pdfTexts.length - 1) {
+      setSelectedIndex(selectedIndex + 1);
+    }
   };
 
-  const handleDelete = async (id) => {
-    await onDelete(id);
-    setSelectedPdfText(null);
-    setShowText(false);
-    setShowTokenizedText(false);
+  const handlePrevious = () => {
+    if (selectedIndex > 0) {
+      setSelectedIndex(selectedIndex - 1);
+    }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true); // Consider setting loading true when delete operation starts
+    await onDelete(pdfTexts[selectedIndex].id);
+    if (selectedIndex >= pdfTexts.length - 1) {
+      setSelectedIndex(pdfTexts.length - 2);
+    }
+    setLoading(false); // Reset loading state once delete operation is complete
   };
 
   const handleShowTextToggle = () => {
@@ -33,12 +46,13 @@ const PdfTextDisplay = ({ pdfTexts, onDelete }) => {
     }, 200);
   };
 
-  const handleShowTokensToggle = () => {
-    setLoading(true);
+  const handleShowTokensToggle = async () => {
+    setLoadingTokens(true); // Set loadingTokens to true to indicate tokenization is in process
+    // Simulate or await the tokenization process
     setTimeout(() => {
       setShowTokenizedText(!showTokenizedText);
-      setLoading(false);
-    }, 200);
+      setLoadingTokens(false); // Reset loadingTokens state once tokenization is complete
+    }, 200); // Replace this with your actual tokenization call if asynchronous
   };
 
   const handleHighlightToggle = () => {
@@ -53,36 +67,46 @@ const PdfTextDisplay = ({ pdfTexts, onDelete }) => {
       window.getSelection().removeAllRanges();
     }
   };
+
+  const selectedPdfText = pdfTexts.length > 0 ? pdfTexts[selectedIndex] : null;
   const t = useTranslation().t;
+
+
   return (
     <div className="my-4 font-base">
       {pdfTexts.length > 0 && (
-        <div className="flex items-center justify-center text-center space-x-3">
-          <label className="text-2xl font-bold">{t('Choose file for annotation')}</label>
-          <select
-            className="border rounded-md p-2 shadow focus:border-blue-400 focus:ring focus:ring-blue-200 transition"
-            onChange={handlePdfSelect}
-          >
-            <option value="">--Choose file--</option>
-            {pdfTexts.map((text) => (
-              <option key={text.id} value={text.id}>{text.filename}</option>
-            ))}
-          </select>
-        </div>
+        <>
+          <div className="flex items-center justify-center text-center space-x-3 my-2">
+            <button onClick={handlePrevious}>&lt;</button>
+            <select
+              className="border rounded-md p-2 shadow focus:border-blue-400 focus:ring focus:ring-blue-200 transition"
+              value={selectedPdfText ? selectedPdfText.id : ''}
+              onChange={(e) => setSelectedIndex(pdfTexts.findIndex(text => text.id === parseInt(e.target.value)))}
+            >
+              {pdfTexts.map((text) => (
+                <option key={text.id} value={text.id}>{text.filename}</option>
+              ))}
+            </select>
+            <button onClick={handleNext}>&gt;</button>
+          </div>
+          <div className="flex justify-center items-center">
+            <span className="text-lg font-semibold">{selectedPdfText ? selectedPdfText.filename : ''}</span>
+          </div>
+        </>
       )}
       {selectedPdfText && (
-        <div className="mt-5 border flex items-center justify-center text-center space-x-3 p-4 rounded">
-          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-3" onClick={handleShowTextToggle} disabled={loading}>
-            {showText ? "Hide Text" : "Show Text"}
+        <div className="mt-5 border flex flex-col items-center justify-center text-center space-y-3 p-4 rounded">
+          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onClick={handleShowTextToggle} disabled={loading}>
+            {showText ? t("Hide Text") : t("Show Text")}
           </button>
           <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600" onClick={handleShowTokensToggle} disabled={loading}>
-            {showTokenizedText ? "Hide Tokens" : "Show Tokens"}
+            {showTokenizedText ? t("Hide Tokens") : t("Show Tokens")}
           </button>
-          <button className="ml-3 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" onClick={() => handleDelete(selectedPdfText.id)}>
-            Delete
+          <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" onClick={handleDelete} disabled={loading}>
+            {t("Delete")}
           </button>
-          <button className="ml-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600" onClick={handleHighlightToggle}>
-            {highlightMode ? "Disable Highlighter" : "Enable Highlighter"}
+          <button className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600" onClick={handleHighlightToggle} disabled={loading}>
+            {highlightMode ? t("Disable Highlighter") : t("Enable Highlighter")}
           </button>
         </div>
       )}
@@ -91,7 +115,13 @@ const PdfTextDisplay = ({ pdfTexts, onDelete }) => {
           <p>{selectedPdfText.text}</p>
         </div>
       )}
-      {selectedPdfText && showTokenizedText && !loading && (
+       {loadingTokens && (
+        <div className="flex justify-center items-center">
+          <ThreeDots color="#4A90E2" height={80} width={80} />
+        </div>
+      )}
+
+      {selectedPdfText && showTokenizedText && !loadingTokens && (
         <PDFTokenViewer pdfTextId={selectedPdfText.id} />
       )}
       {loading && (
@@ -101,7 +131,7 @@ const PdfTextDisplay = ({ pdfTexts, onDelete }) => {
       )}
       {highlightedTexts.length > 0 && (
         <div className="mt-4 p-4 border rounded">
-          <h3 className="font-bold">Highlighted Texts:</h3>
+          <h3 className="font-bold">{t("Highlighted Texts:")}</h3>
           <ul>
             {highlightedTexts.map((text, index) => (
               <li key={index}>{text}</li>

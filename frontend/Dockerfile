@@ -1,23 +1,16 @@
-# Use an official Node.js runtime as the base image
+#Použitý je oficiálny obraz Node.js 14-alpine pre menšiu veľkosť obrazu.
 FROM node:14-alpine
-
-# Set the working directory in the container
+#  Pracovný adresár v kontajneri je nastavený na /app.
 WORKDIR /app
-
-# Copy the package.json and package-lock.json files to the container
+# Závislosti definované v package.json a package-lock.json sú inštalované pomocou npm.
 COPY package*.json ./
 
-# Install the dependencies
 RUN npm install
-
-# Copy the rest of the application code to the container
+#Kód React aplikácie je skopírovaný a následne zostavený príkazom npm run build.
 COPY . .
 
-# Build the React app
 RUN npm run build
-
-# Expose the port on which the app will run
+#Aplikácia je dostupná na porte 3000.
 EXPOSE 3000
-
-# Set the command to start the app
+#Aplikácia je spustená s príkazom npm start.
 CMD ["npm", "start"]
