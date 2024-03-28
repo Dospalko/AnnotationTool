@@ -17,27 +17,37 @@ function PDFTokenViewer(props) {
   const [error, setError] = useState(null);
   const [currentSelection, setCurrentSelection] = useState(new Set());
   const dragStart = useRef(false);
-  const [isTokensLoaded, setIsTokensLoaded] = useState(false);
-  const [isAnnotationsLoaded, setIsAnnotationsLoaded] = useState(false);
 
   const autoSaveInterval = 5000;
 
   useEffect(() => {
+    let source = axios.CancelToken.source(); // Create a cancel token source
+  
     const fetchTokensAndAnnotations = async () => {
       try {
         const tokenResponse = await axios.get(
-          `http://localhost:5000/tokenize_pdf/${props.pdfTextId}`
+          `http://localhost:5000/tokenize_pdf/${props.pdfTextId}`,
+          { cancelToken: source.token } // Pass cancel token to the request
         );
         setTokens(tokenResponse.data);
         const annotationResponse = await axios.get(
-          "http://localhost:5000/annotations"
+          "http://localhost:5000/annotations",
+          { cancelToken: source.token } // Pass cancel token to the request
         );
         setAnnotations(annotationResponse.data);
       } catch (error) {
-        setError(error);
+        if (!axios.isCancel(error)) { // Check if the error is due to cancellation
+          setError(error);
+        }
       }
     };
+  
     fetchTokensAndAnnotations();
+  
+    // Cleanup function to cancel ongoing requests when component unmounts
+    return () => {
+      source.cancel("Component unmounted"); // Cancel ongoing requests
+    };
   }, [props.pdfTextId]);
 
   const handleSaveTokens = useCallback(async () => {
@@ -144,27 +154,78 @@ function PDFTokenViewer(props) {
 
   const selectedTokens = useRef(new Set());
 
-  const tokenElements = useMemo(() => tokens.map((token, index) => {
-    const isSelected = currentSelection.has(token.id);
-    // Determine if this token is the last in the current selection
-    const isLastSelected = isSelected && [...currentSelection].sort((a, b) => a - b).indexOf(token.id) === currentSelection.size - 1;
-    
-    return (
-      <span key={`${token.word}-${index}`}
-            className={`inline-block cursor-pointer px-1 py-0.5 m-0.5 rounded ${isSelected ? "bg-blue-200" : "bg-gray-100"} hover:bg-blue-300`}
-            onMouseDown={() => handleDragStart(token.id)}
-            onMouseEnter={() => handleTokenMouseEnter(token.id)}
-            onMouseUp={handleDragEnd}
-            style={{ 
-              backgroundColor: token.annotation ? `rgba(${hexToRgb(token.annotation.color)}, 0.5)` : '', // Set background color with 50% opacity
-              border: isSelected ? '2px solid red' : '', // Add a border for selected tokens
-            }}>
-        {token.word}
-        {token.annotation && <span className="text-xs text-white m-2 p-1" style={{ backgroundColor: token.annotation.color }}>({token.annotation.text})</span>}
-        {isLastSelected && <span className="text-xs"> (Add Text)</span>} {/* Add additional text to the last token */}
-      </span>
-    );
-  }), [tokens, currentSelection]);
+  const tokenElements = useMemo(() => {
+    const mergedTokens = [];
+    let currentMergedToken = '';
+  
+    tokens.forEach((token, index) => {
+        // Check if the current token has an annotation
+        if (token.annotation) {
+            // Check if there's a previous merged token and it belongs to the same annotation
+            const prevMergedToken = mergedTokens[mergedTokens.length - 1];
+            if (prevMergedToken && prevMergedToken.annotation && prevMergedToken.annotation.id === token.annotation.id) {
+                // If the previous merged token belongs to the same annotation, concatenate the current token with it
+                prevMergedToken.text += token.word;
+            } else {
+                // If there's no previous merged token or it belongs to a different annotation, start a new merged token
+                mergedTokens.push({
+                    text: token.word,
+                    annotation: token.annotation
+                });
+            }
+        } else {
+            // If the token doesn't have an annotation, push the current merged token (if any) and reset it
+            if (currentMergedToken) {
+                mergedTokens.push({
+                    text: currentMergedToken,
+                    annotation: null
+                });
+                currentMergedToken = '';
+            }
+            // Push the standalone token without merging
+            mergedTokens.push({
+                text: token.word,
+                annotation: null
+            });
+        }
+    });
+
+    // Push the remaining currentMergedToken if any
+    if (currentMergedToken) {
+        mergedTokens.push({
+            text: currentMergedToken,
+            annotation: null
+        });
+    }
+  
+    return mergedTokens.map((mergedToken, index) => {
+        const isSelected = currentSelection.has(tokens[index].id);
+  
+        return (
+            <span
+                key={`${mergedToken.text}-${index}`}
+                className={`inline-block cursor-pointer px-1 py-0.5 m-0.5 rounded ${isSelected ? "bg-blue-200" : "bg-gray-100"} hover:bg-blue-300`}
+                onMouseDown={() => handleDragStart(tokens[index].id)}
+                onMouseEnter={() => handleTokenMouseEnter(tokens[index].id)}
+                onMouseUp={handleDragEnd}
+                style={{ 
+                    backgroundColor: mergedToken.annotation ? `rgba(${hexToRgb(mergedToken.annotation.color)}, 0.5)` : '', // Set background color with 50% opacity
+                    border: isSelected ? '2px solid red' : '', // Add a border for selected tokens
+                }}
+            >
+                {mergedToken.text}
+                {mergedToken.annotation && (
+                    <span className="text-xs text-white m-2 p-1" style={{ backgroundColor: mergedToken.annotation.color }}>
+                        ({mergedToken.annotation.text})
+                    </span>
+                )}
+            </span>
+        );
+    });
+}, [tokens, currentSelection]);
+
+
+
   
   // Function to convert hex color to RGB format
   function hexToRgb(hex) {
@@ -195,7 +256,7 @@ function PDFTokenViewer(props) {
         </button>
         <ExportAnnotationsButton pdfTextId={props.pdfTextId} />
       </div>
-
+  
       <div className="flex flex-wrap">{tokenElements}</div>
       {showAnnotationModal && <AnnotationModal />}
     </div>

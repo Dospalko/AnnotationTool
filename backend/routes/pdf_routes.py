@@ -9,6 +9,7 @@ from PyPDF2 import PdfReader
 from docx import Document
 import os
 from routes.annotation_routes import annotate_texts_with_ner
+from models.project import Project
 pdf_routes = Blueprint('pdf_routes', __name__)
 
 @pdf_routes.route('/upload_file', methods=['POST'])
@@ -39,6 +40,7 @@ def upload_file():
         db.session.commit()
 
         return jsonify({"message": "File uploaded and text extracted."}), 201
+    
 
 @pdf_routes.route('/api/files-overview', methods=['GET'])
 def get_files_overview():
@@ -151,6 +153,15 @@ def get_pdf_texts():
     output = [{'id': text.id, 'text': text.text, 'filename': text.filename} for text in pdf_texts]  # Include filename here
     return jsonify(output)
 
+@pdf_routes.route('/pdf_texts/<int:pdf_text_id>', methods=['GET'])
+def get_pdf_text(pdf_text_id):
+    pdf_text = PdfText.query.get_or_404(pdf_text_id)
+    return jsonify({
+        'id': pdf_text.id,
+        'text': pdf_text.text,
+        'filename': pdf_text.filename
+    })
+
 @pdf_routes.route('/delete_pdf_text/<int:pdf_text_id>', methods=['DELETE'])
 def delete_pdf_text(pdf_text_id):
     pdf_text = PdfText.query.get(pdf_text_id)
@@ -171,3 +182,32 @@ def delete_pdf_text(pdf_text_id):
 def get_tokenized_text(pdf_text_id):
     tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
     return jsonify([token.word for token in tokens])
+
+# Assuming this is within your routes/pdf_routes.py
+
+@pdf_routes.route('/files/unassigned', methods=['GET'])
+def get_unassigned_files():
+    unassigned_files = PdfText.query.filter_by(project_id=None).all()
+    return jsonify([{'id': file.id, 'filename': file.filename} for file in unassigned_files]), 200
+
+@pdf_routes.route('/assign-files', methods=['POST'])
+def assign_files_to_project():
+    data = request.json
+    project_id = data['project_id']
+    file_ids = data['file_ids']
+
+    # Check if the project exists
+    project = Project.query.filter_by(id=project_id).first()
+    if not project:
+        return jsonify({'error': 'Project not found'}), 404
+
+    # Update PdfText instances with the provided project_id
+    PdfText.query.filter(PdfText.id.in_(file_ids)).update({'project_id': project_id}, synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({'message': 'Files successfully assigned to the project'}), 200
+
+@pdf_routes.route('/projects/<int:project_id>/files', methods=['GET'])
+def get_project_files(project_id):
+    project_files = PdfText.query.filter_by(project_id=project_id).all()
+    return jsonify([{'id': file.id, 'filename': file.filename} for file in project_files]), 200

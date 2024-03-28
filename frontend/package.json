@@ -13,6 +13,7 @@
     "@testing-library/user-event": "^13.5.0",
     "aos": "^2.3.4",
     "axios": "^1.5.1",
+    "cross-spawn": "^7.0.3",
     "gapi-client": "^0.0.3",
     "gapi-script": "^1.2.0",
     "http-proxy-middleware": "^2.0.6",

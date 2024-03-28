@@ -5,10 +5,10 @@ import HomePage from "./pages/HomePage";
 import FeaturesPage from "./pages/FeaturesPage";
 import Annotator from "./pages/Annotator";
 import Chooser from "./pages/Chooser";
-import LayoutLM from "./pages/LayoutLM";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import FilesOverviewPage from "./pages/FilesOverviewPage";
+import ProjectDetailPage from "./pages/ProjectDetailPage";
 
 AOS.init({
   duration: 1200,
@@ -20,10 +20,11 @@ const App = () => {
       <Routes>
         <Route path="/" element={<PageLoader><HomePage /></PageLoader>} />
         <Route path="/features" element={<PageLoader><FeaturesPage /></PageLoader>} />
-        <Route path="/annotator" element={<PageLoader><Annotator /></PageLoader>} />
+        <Route path="/annotator/:fileId" element={<PageLoader><Annotator /></PageLoader>} />
         <Route path="/select" element={<PageLoader><Chooser /></PageLoader>} />
-        <Route path="/layoutlm-annotation" element={<PageLoader><LayoutLM /></PageLoader>} />
         <Route path="/files" element={<PageLoader><FilesOverviewPage /></PageLoader>} />
+        <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+     
       </Routes>
     </Router>
   );

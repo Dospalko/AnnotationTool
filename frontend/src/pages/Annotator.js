@@ -5,32 +5,36 @@ import Footer from "../components/Footer/Footer";
 import PdfTextDisplay from "../components/annotation/PdfTextDisplay";
 import axios from "axios";
 import Sidebar from "../components/annotation/Sidebar";
+import { useParams } from "react-router-dom";
 
 const Annotator = () => {
   const [pdfTexts, setPdfTexts] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const fetchPdfTexts = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/pdf_texts");
-      setPdfTexts(res.data);
-    } catch (error) {
-      console.error("Failed to fetch PDF texts:", error);
-    }
-  };
-
-  const deletePdfText = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/delete_pdf_text/${id}`);
-      await fetchPdfTexts();
-    } catch (error) {
-      console.error("Failed to delete PDF text:", error);
-    }
-  };
-
+  const { fileId } = useParams(); 
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetchPdfTexts();
-  }, []);
+    const fetchTexts = async () => {
+      setLoading(true);
+      try {
+        let url = "http://localhost:5000/pdf_texts";
+        if (fileId) {
+          url += `/${fileId}`; // Fetch specific file if fileId is present
+        }
+        const response = await axios.get(url);
+        setPdfTexts(fileId ? [response.data] : response.data);
+      } catch (error) {
+        console.error("Error fetching texts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTexts();
+  }, [fileId]);
+
+
+
+
+  
 
   return (
     <div className="flex flex-col h-screen">
@@ -41,9 +45,8 @@ const Annotator = () => {
           <div className="flex flex-col w-full p-4">
             {/* Container for PDF Text Display */}
             <div className="flex-1 bg-white shadow-lg rounded-lg p-4">
-              <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} />
+              <PdfTextDisplay pdfTexts={pdfTexts}  />
             </div>
-            {/* Optionally, add more components or contents here */}
           </div>
         </div>
       </main>

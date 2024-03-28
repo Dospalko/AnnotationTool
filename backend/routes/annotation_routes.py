@@ -26,8 +26,9 @@ entity_color_map = {
     'I-LOKALITA': '#3357FF',  # Same type, same color
     # Add other types as needed
 }
+
+ner_pipeline = pipeline('ner', model='crabz/slovakbert-ner')
 def annotate_texts_with_ner(pdf_text_id):
-    ner_pipeline = pipeline('ner', model='crabz/slovakbert-ner')
     pdf_text = PdfText.query.get(pdf_text_id)
     if not pdf_text:
         return "PDF text not found", 404
@@ -51,8 +52,7 @@ def annotate_texts_with_ner(pdf_text_id):
         entity_label = annotated_spans[(start, end)]
         color = entity_color_map.get(entity_label, None)  # Get the color for the entity type
         annotation_id = None
-        if entity_label != '0':  # '0' means no entity
-            # Find or create the annotation in the database
+        if entity_label != '0':  
             annotation = Annotation.query.filter_by(text=entity_label).first()
             if not annotation:
                 annotation = Annotation(text=entity_label, color=color)
@@ -316,22 +316,3 @@ def get_non_favorite_annotations():
                       "favorite": ann.favorite} for ann in non_favorite_annotations]
     return jsonify(non_favorites)
 
-@annotation_routes.route('/relations', methods=['POST'])
-def create_relation():
-    data = request.json
-    source_token_id = data.get('source_token_id')
-    target_token_id = data.get('target_token_id')
-    relation_type = data.get('relation_type')
-
-    if not all([source_token_id, target_token_id, relation_type]):
-        return jsonify({"error": "Missing data for creating a relation"}), 400
-
-    new_relation = Relation(source_token_id=source_token_id, target_token_id=target_token_id, relation_type=relation_type)
-    db.session.add(new_relation)
-    db.session.commit()
-    return jsonify(new_relation.to_dict()), 201
-
-@annotation_routes.route('/relations', methods=['GET'])
-def get_relations():
-    relations = Relation.query.all()
-    return jsonify([relation.to_dict() for relation in relations]), 200
