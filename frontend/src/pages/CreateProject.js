@@ -24,8 +24,8 @@ const CreateProject = () => {
   };
 
   return (
-    <div className="mb-8">
-      <h2 className="text-xl font-semibold mb-4">Create Project</h2>
+    <div className="mx-auto w-max">
+      <h2 className="text-xl font-semibold mb-4 mx-auto text-center text-white">Vytvorit projekt</h2>
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
         <input
           type="text"
@@ -34,8 +34,8 @@ const CreateProject = () => {
           placeholder="Project Name"
           className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out">
-          Create
+        <button type="submit" className="px-4 py-2 bg-[#F700C6]  text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out">
+          Vytvorit
         </button>
       </form>
     </div>

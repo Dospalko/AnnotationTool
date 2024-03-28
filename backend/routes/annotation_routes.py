@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, request, Response
+
+from flask import jsonify, Blueprint, request, make_response, Response
+
 from models.pdf_text import PdfText  # Import the PdfText model here
 from models.token import Token
 from models.annotation import Annotation
@@ -13,6 +15,7 @@ from io import StringIO
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import Element, SubElement, tostring
 from transformers import pipeline
+
 annotation_routes = Blueprint('annotation_routes', __name__)
 
 
@@ -25,6 +28,10 @@ entity_color_map = {
     'B-LOKALITA': '#3357FF',  # Example: blue
     'I-LOKALITA': '#3357FF',  # Same type, same color
     # Add other types as needed
+}
+ner_models = {
+    'bertz': 'crabz/slovakbert-ner',
+    'conll': 'ju-bezdek/slovakbert-conll2003-sk-ner'
 }
 
 ner_pipeline = pipeline('ner', model='crabz/slovakbert-ner')
@@ -113,129 +120,90 @@ def assign_annotation():
         print(f"Error: {e}")
         return jsonify({"error": "An internal error occurred"}), 500
 
+def generate_csv_data(annotations, style):
+    output = StringIO()
+    writer = csv.writer(output)
 
+    if style == 'bio':
+        header = ['word', 'BIO', 'start', 'end']
+    else:  # 'normal' style
+        header = ['word', 'annotation']
+
+    writer.writerow(header)
+
+    for annotation in annotations:
+        if style == 'bio':
+            row = [annotation['word'], annotation['BIO'], annotation['start'], annotation['end']]
+        else:  # 'normal' style
+            row = [annotation['word'], annotation['annotation']]
+        writer.writerow(row)
+
+    output.seek(0)
+    return output.getvalue()
+
+
+def generate_xml_data(annotations, style):
+    root = Element('annotations')
+
+    for annotation in annotations:
+        token_elem = SubElement(root, 'token')
+        SubElement(token_elem, 'word').text = annotation['word']
+        
+        if style == 'bio':
+            SubElement(token_elem, 'BIO').text = annotation['BIO']
+            SubElement(token_elem, 'start').text = str(annotation['start'])
+            SubElement(token_elem, 'end').text = str(annotation['end'])
+        else:  # 'normal' style
+            SubElement(token_elem, 'annotation').text = annotation['annotation']
+
+    xml_str = tostring(root, 'utf-8')
+    parsed_xml = parseString(xml_str)
+    return parsed_xml.toprettyxml(indent="  ")
 
 @annotation_routes.route('/export_annotations/<int:pdf_text_id>', methods=['GET'])
 def export_annotations(pdf_text_id):
-    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id,
-                                Token.annotation_id.isnot(None)).order_by(Token.id).all()
-    annotations_data = []
-    annotation = None
-    label_words = []  # To accumulate words for a single annotation
+    style = request.args.get('style', 'normal')
+    format_type = request.args.get('format', 'json')
 
-    for token in tokens:
-        if annotation is None or token.annotation_id != annotation['annotation_id']:
+    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id).all()
+    if not tokens:
+        return jsonify({'error': 'No tokens found for the given PDF text ID'}), 404
+
+    exported_annotations = []
+
+    if style == 'bio':
+        previous_tag = "O"
+        for token in tokens:
+            bio_tag = "O"
+            annotation = Annotation.query.get(token.annotation_id).text if token.annotation_id else None
             if annotation:
-                annotation['annotations'][0]['label'] = ' '.join(label_words)
-                annotations_data.append(annotation)
-            annotation = {
-                "text_id": f"text{pdf_text_id}",
-                "filename": token.pdf_text_id,
-                "annotations": [{
-                    "label": token.word,  # Initially set to the first word; will be updated
-                    "type": token.annotation.text,
-                    "start": token.start,
-                    "end": token.end
-                }],
-                "annotation_id": token.annotation_id  # Keep track of the current annotation_id
-            }
-            label_words = [token.word]  # Reset label_words with the current token's word
-        else:
-            # Append current word to label_words and update the end of the annotation
-            label_words.append(token.word)
-            annotation['annotations'][0]['end'] = token.end
+                bio_tag = "B-" + annotation if previous_tag != annotation else "I-" + annotation
+            exported_annotations.append({
+                'word': token.word,
+                'BIO': bio_tag,
+                'start': str(token.start),
+                'end': str(token.end)
+            })
+            previous_tag = annotation or "O"
+    else:  # Normal style
+        for token in tokens:
+            annotation_text = Annotation.query.get(token.annotation_id).text if token.annotation_id else "O"
+            exported_annotations.append({
+                'word': token.word,
+                'annotation': annotation_text
+            })
 
-    # Add the last annotation
-    if annotation:
-        annotation['annotations'][0]['label'] = ' '.join(label_words)
-        annotations_data.append(annotation)
-
-    return jsonify({"annotations": annotations_data})
-
-
-
-def convert_to_xml(bio_data):
-    root = Element('annotation')
-    document = SubElement(root, 'document', {'source': bio_data['source']})
-    sentence = SubElement(document, 'sentence', {
-    'id': str(bio_data['sentence_id'])})
-
-    for token in bio_data['tokens']:
-        token_elem = SubElement(sentence, 'token', {
-            'id': str(token['id']),
-            'begin': str(token['begin']),
-            'end': str(token['end'])
-        })
-        token_elem.text = token['word']
-
-    entities = SubElement(root, 'entities')
-    for entity in bio_data['entities']:
-        entity_elem = SubElement(entities, 'entity', {
-            'type': entity['type'],
-            'begin': str(entity['begin']),
-            'end': str(entity['end'])
-        })
-        entity_elem.text = entity['text']
-
-    return tostring(root, encoding='unicode')
-
-
-@annotation_routes.route('/export_annotations_bio/<int:pdf_text_id>', methods=['GET'])
-def export_annotations_bio(pdf_text_id):
-    export_format = request.args.get('format', 'json')
-    tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
-    annotations = Annotation.query.all()
-    annotation_dict = {ann.id: ann.text for ann in annotations}
-
-    bio_data = {
-        'source': 'example.txt',
-        'sentence_id': 1,
-        'tokens': [],
-        'entities': []
-    }
-    current_entity = None
-
-    for token in tokens:
-        token_data = {
-            'id': token.id,
-            'begin': token.start,
-            'end': token.end,
-            'word': token.word
-        }
-
-        if token.annotation_id:
-            ann_text = annotation_dict[token.annotation_id]
-            if current_entity and current_entity['type'] == ann_text:
-                token_data['BIO'] = 'I-' + ann_text
-            else:
-                token_data['BIO'] = 'B-' + ann_text
-                current_entity = {
-                    'type': ann_text, 'begin': token.start, 'end': token.end, 'text': ann_text}
-                bio_data['entities'].append(current_entity)
-        else:
-            token_data['BIO'] = 'O'
-            current_entity = None
-
-        bio_data['tokens'].append(token_data)
-
-    if export_format == 'xml':
-        xml_data = convert_to_xml(bio_data)
-        return Response(xml_data, mimetype='text/xml')
-
-    elif export_format == 'csv':
-        output = StringIO()
-        writer = csv.writer(output)
-        header = ['id', 'word', 'begin', 'end', 'BIO']
-        writer.writerow(header)
-        for token in bio_data["annotation"]["document"]["sentence"]["tokens"]:
-            row = [token['id'], token['word'],
-                   token['begin'], token['end'], token['BIO']]
-            writer.writerow(row)
-        output.seek(0)
-        return Response(output, mimetype='text/csv', headers={"Content-disposition": "attachment; filename=annotations.csv"})
-
-    else:  # Default to JSON
-        return jsonify(bio_data)
+    # Generate export based on the format
+    if format_type == 'json':
+        return jsonify(exported_annotations)
+    elif format_type == 'csv':
+        csv_data = generate_csv_data(exported_annotations, style)
+        return Response(csv_data, mimetype='text/csv', headers={"Content-Disposition": "attachment;filename=annotations.csv"})
+    elif format_type == 'xml':
+        xml_data = generate_xml_data(exported_annotations, style)
+        return Response(xml_data, mimetype='application/xml', headers={"Content-Disposition": "attachment;filename=annotations.xml"})
+    else:
+        return jsonify({'error': 'Invalid export format'}), 400
 
 
 @annotation_routes.route('/add', methods=['POST'])

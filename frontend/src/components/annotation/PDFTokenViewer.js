@@ -80,6 +80,7 @@ function PDFTokenViewer(props) {
       setCurrentSelection(new Set(selectedTokens.current));
     }
   };
+  
 
   const handleDragEnd = () => {
     if (dragStart.current && selectedTokens.current.size > 0) {

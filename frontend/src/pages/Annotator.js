@@ -56,6 +56,3 @@ const Annotator = () => {
 };
 
 export default Annotator;
-
-// <AnnotationForm />
-// <PdfTextDisplay pdfTexts={pdfTexts} onDelete={deletePdfText} />

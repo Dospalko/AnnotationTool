@@ -5,11 +5,10 @@ import { initClient, signIn, signOut } from './googleDriveSetup';
 import { useTranslation } from 'react-i18next';
 
 function ExportAnnotationsButton({ pdfTextId }) {
-  const [exportFormat, setExportFormat] = useState("json");
-  const [exportStyle, setExportStyle] = useState("normal");
+  const [exportFormat, setExportFormat] = useState('json'); // Default to JSON
+  const [exportStyle, setExportStyle] = useState('normal'); // Default to normal
   const [showExportModal, setShowExportModal] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
-
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -36,13 +35,8 @@ function ExportAnnotationsButton({ pdfTextId }) {
   const handleExportAnnotations = async (saveToDrive = false) => {
     try {
       let exportURL = `http://localhost:5000/export_annotations/${pdfTextId}?format=${exportFormat}&style=${exportStyle}`;
-
-      const response = await axios.get(exportURL);
+      const response = await axios.get(exportURL, { responseType: 'blob' }); // Ensure to get response as a blob
       const data = response.data;
-
-      let mimeType = "application/json";
-      if (exportFormat === "csv") mimeType = "text/csv";
-      else if (exportFormat === "xml") mimeType = "application/xml";
 
       if (saveToDrive) {
         if (!isSignedIn) {
@@ -50,13 +44,10 @@ function ExportAnnotationsButton({ pdfTextId }) {
           return;
         }
         const accessToken = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
-        const metadata = {
-          name: `annotations_${pdfTextId}.${exportFormat}`,
-          mimeType: mimeType,
-        };
+        const metadata = { name: `annotations_${pdfTextId}.${exportFormat}`, mimeType: data.type };
         const form = new FormData();
         form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        form.append('file', new Blob([JSON.stringify(data, null, 2)], { type: mimeType }));
+        form.append('file', data);
 
         await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
           method: 'POST',
@@ -66,18 +57,19 @@ function ExportAnnotationsButton({ pdfTextId }) {
 
         alert('Saved to Google Drive');
       } else {
-        const blob = new Blob([exportFormat === 'json' ? JSON.stringify(data, null, 2) : data], { type: mimeType });
-        const url = window.URL.createObjectURL(blob);
+        const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `annotations_${pdfTextId}.${exportFormat}`;
+        link.setAttribute('download', `annotations_${pdfTextId}.${exportFormat}`);
         document.body.appendChild(link);
         link.click();
+        link.parentNode.removeChild(link);
         window.URL.revokeObjectURL(url);
       }
       setShowExportModal(false);
     } catch (err) {
-      console.error(err);
+      console.error('Error exporting annotations:', err);
+      alert('Failed to export annotations. Please try again.');
     }
   };
 

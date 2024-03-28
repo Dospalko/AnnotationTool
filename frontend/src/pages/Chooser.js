@@ -31,30 +31,38 @@ const Chooser = () => {
   };
 
   return (
-    <section>
+    <section className='flex font-base flex-col min-h-screen bg-gray-900'>
       <Header/>
-      <div className="max-w-4xl mx-auto h-screen p-4">
-      <CreateProject fetchProjects={fetchProjects} />
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Projects</h2>
-        {projects.length > 0 ? (
-          projects.map((project) => (
-            <div key={project.id} className="flex justify-between items-center bg-white shadow-md rounded-lg p-4 mb-4">
-              <Link to={`/projects/${project.id}`} className="text-xl font-medium hover:text-blue-600">
-                {project.name}
-              </Link>
-              <button onClick={() => handleDeleteProject(project.id)} className="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                Delete
-              </button>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-500">No projects found.</p>
-        )}
+      <div className="flex-grow p-8 container mx-auto">
+        <CreateProject fetchProjects={fetchProjects} />
+        <div className="mt-8">
+          <h2 className="text-3xl font-bold mb-6  text-white">Projects</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.length > 0 ? (
+              projects.map((project) => (
+                <div key={project.id} className="bg-white shadow-md rounded-lg overflow-hidden">
+                  <div className="p-6 hover:bg-blue-50 cursor-pointer">
+                    <Link to={`/projects/${project.id}`} className="text-xl font-medium hover:text-blue-600">
+                      {project.name}
+                    </Link>
+                  </div>
+                  <div className="px-6 py-4 bg-gray-100 flex justify-end">
+                    <button onClick={() => navigate(`/projects/${project.id}`)} className="text-indigo-600 hover:text-indigo-800 bg-green-500 font-semibold py-2 px-4">
+                      Open
+                    </button>
+                    <button onClick={() => handleDeleteProject(project.id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-200 text-xl">No projects found.</p>
+            )}
+          </div>
+        </div>
       </div>
-   
-    </div>
-    <Footer/>
+      <Footer/>
     </section>
   );
 };
