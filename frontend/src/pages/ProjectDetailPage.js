@@ -12,7 +12,9 @@ const ProjectDetail = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
+  const [projectName, setProjectName] = useState('');
   useEffect(() => {
+    fetchProjectDetails();
     fetchFilesOverview();
   }, [projectId]);
 
@@ -39,15 +41,38 @@ const ProjectDetail = () => {
       console.error("Error fetching project files and overview:", error);
     }
   };
-
+  const fetchProjectDetails = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/projects/${projectId}`);
+      console.log(response.data); // Log the response data to see if the project name is fetched correctly
+      setProjectName(response.data.name);
+    } catch (error) {
+      console.error("Error fetching project details:", error);
+    }
+  };
+  
   const handleFileChange = (event) => {
     setSelectedFiles(event.target.files);
   };
 
   const handleUploadFiles = async () => {
+    if (selectedFiles.length === 0) {
+      alert("Please select at least one file to upload.");
+      return;
+    }
+  
+    const allowedExtensions = ['.pdf', '.docx', '.txt'];
+    const invalidFiles = Array.from(selectedFiles).filter(file => !allowedExtensions.includes(file.name.slice(-4).toLowerCase()));
+  
+    if (invalidFiles.length > 0) {
+      const invalidFileNames = invalidFiles.map(file => file.name).join(', ');
+      alert(`Invalid file(s) detected: ${invalidFileNames}. Please upload files with extensions .pdf, .docx, or .txt.`);
+      return;
+    }
+  
     const formData = new FormData();
     Array.from(selectedFiles).forEach(file => formData.append('files', file));
-
+  
     try {
       await axios.post(`http://localhost:5000/upload_files_to_project/${projectId}`, formData);
       setShowModal(false);
@@ -57,13 +82,14 @@ const ProjectDetail = () => {
       console.error("Error uploading files:", error);
     }
   };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <div className="flex-grow p-12 bg-gray-900">
         <div className="max-w-4xl mx-auto shadow-lg rounded-lg bg-white text-black font-base p-6">
-          <h2 className="text-2xl font-semibold mb-4">Project Details</h2>
+        <h2 className="text-2xl font-semibold mb-4">Detaily projektu: {projectName}</h2>
+
+      
           <input type="file" multiple onChange={handleFileChange} className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4" />
           <button onClick={() => setShowModal(true)} className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Confirm Upload</button>
           {showModal && <Modal onConfirm={handleUploadFiles} onCancel={() => setShowModal(false)} />}

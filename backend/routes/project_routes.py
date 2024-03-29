@@ -23,6 +23,11 @@ def list_projects():
     projects = Project.query.all()
     return jsonify([{'id': project.id, 'name': project.name} for project in projects]), 200
 
+@project_routes.route('/projects/<int:project_id>', methods=['GET'])
+def get_project_details(project_id):
+    project = Project.query.get_or_404(project_id)
+    return jsonify({'id': project.id, 'name': project.name}), 200
+
 @project_routes.route('/projects/<int:project_id>/files', methods=['GET'])
 def get_project_files(project_id):
     project = Project.query.get_or_404(project_id)
