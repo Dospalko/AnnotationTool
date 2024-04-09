@@ -73,8 +73,9 @@ ALTER SEQUENCE public.annotation_id_seq OWNED BY public.annotation.id;
 
 CREATE TABLE public.pdf_text (
     id integer NOT NULL,
-    text text,
-    filename character varying(255)
+    text text NOT NULL,
+    filename character varying(255) NOT NULL,
+    project_id integer
 );
 
 
@@ -100,6 +101,40 @@ ALTER SEQUENCE public.pdf_text_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.pdf_text_id_seq OWNED BY public.pdf_text.id;
+
+
+--
+-- Name: project; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.project (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.project OWNER TO postgres;
+
+--
+-- Name: project_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.project_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.project_id_seq OWNER TO postgres;
+
+--
+-- Name: project_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.project_id_seq OWNED BY public.project.id;
 
 
 --
@@ -145,10 +180,10 @@ ALTER SEQUENCE public.relation_id_seq OWNED BY public.relation.id;
 CREATE TABLE public.token (
     id integer NOT NULL,
     word character varying(50) NOT NULL,
-    pdf_text_id integer NOT NULL,
-    annotation_id integer,
     start integer NOT NULL,
-    "end" integer NOT NULL
+    "end" integer NOT NULL,
+    pdf_text_id integer NOT NULL,
+    annotation_id integer
 );
 
 
@@ -191,6 +226,13 @@ ALTER TABLE ONLY public.pdf_text ALTER COLUMN id SET DEFAULT nextval('public.pdf
 
 
 --
+-- Name: project id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project ALTER COLUMN id SET DEFAULT nextval('public.project_id_seq'::regclass);
+
+
+--
 -- Name: relation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -229,6 +271,14 @@ ALTER TABLE ONLY public.pdf_text
 
 
 --
+-- Name: project project_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project
+    ADD CONSTRAINT project_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: relation relation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -242,6 +292,14 @@ ALTER TABLE ONLY public.relation
 
 ALTER TABLE ONLY public.token
     ADD CONSTRAINT token_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pdf_text pdf_text_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pdf_text
+    ADD CONSTRAINT pdf_text_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.project(id);
 
 
 --

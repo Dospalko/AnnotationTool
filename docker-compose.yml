@@ -1,36 +1,36 @@
-version: '3.8'
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./backend:/app
-    environment:
-      - FLASK_APP=app.py
-      - FLASK_RUN_HOST=0.0.0.0
-      - DATABASE_URL=postgresql://postgres:heslo@db:5432/annotator  # Update the database URL
-    depends_on:
-      - db
+  version: '3.8'
+  services:
+    backend:
+      build: ./backend
+      ports:
+        - "5000:5000"
+      volumes:
+        - ./backend:/app
+      environment:
+        - FLASK_APP=app.py
+        - FLASK_RUN_HOST=0.0.0.0
+        - DATABASE_URL=postgresql://postgres:heslo@db:5432/annotator  # Update the database URL
+      depends_on:
+        - db
 
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    frontend:
+      build: ./frontend
+      ports:
+        - "3000:3000"
+      volumes:
+        - ./frontend:/app
+        - /app/node_modules
 
-  db:
-    image: postgres:16
-    ports:
-      - "5433:5432"  # Map container port 5432 to host port 5432
-    environment:
-      POSTGRES_DB: annotator
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: heslo
-    volumes:
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    db:
+      image: postgres:16
+      ports:
+        - "5433:5432"  # Map container port 5432 to host port 5432
+      environment:
+        POSTGRES_DB: annotator
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: heslo
+      volumes:
+        - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
-volumes:
-  postgres_data:
+  volumes:
+    postgres_data:

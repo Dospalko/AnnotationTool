@@ -16,7 +16,7 @@ def create_project():
     new_project = Project(name=name)
     db.session.add(new_project)
     db.session.commit()
-    return jsonify({'message': 'Project created successfully', 'project_id': new_project.id}), 201
+    return jsonify({'message': 'Projekt bol vytvorený úspešne', 'project_id': new_project.id}), 201
 
 @project_routes.route('/projects', methods=['GET'])
 def list_projects():
