@@ -9,17 +9,17 @@ const CreateProject = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!projectName) {
-      alert('Please enter a project name.');
+      alert('Prosím napíšte názov projektu');
       return;
     }
     try {
       await axios.post('http://localhost:5000/projects', { name: projectName });
-      alert('Project created successfully');
+      alert('Projekt bol úspešne vytvorený');
       setProjectName('');
       navigate(0); // Refreshes the page. For more controlled behavior, consider redirecting to a specific route
     } catch (error) {
-      console.error('Error creating project:', error);
-      alert('Failed to create project');
+      console.error('Nepodarilo sa vytvoriť projekt:', error);
+      alert('Nepodarilo sa vytvoriť projekt');
     }
   };
 
@@ -31,7 +31,7 @@ const CreateProject = () => {
           type="text"
           value={projectName}
           onChange={(e) => setProjectName(e.target.value)}
-          placeholder="Project Name"
+          placeholder="Názov projektu"
           className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button type="submit" className="px-4 py-2 bg-[#F700C6]  text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out">

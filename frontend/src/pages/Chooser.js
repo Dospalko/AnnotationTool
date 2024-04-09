@@ -20,12 +20,12 @@ const Chooser = () => {
   };
 
   const handleDeleteProject = async (projectId) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
+    if (window.confirm('Ste si istý ,že chcete zmazať tento projekt?')) {
       try {
         await axios.delete(`http://localhost:5000/projects/${projectId}`);
-        fetchProjects(); // Refresh projects list
+        fetchProjects(); // Refresh 
       } catch (error) {
-        console.error('Failed to delete project:', error);
+        console.error('Nepodarilo sa zmazať projekt:', error);
       }
     }
   };
@@ -48,16 +48,16 @@ const Chooser = () => {
                   </div>
                   <div className="px-6 py-4 bg-gray-100 flex justify-end">
                     <button onClick={() => navigate(`/projects/${project.id}`)} className="text-indigo-600 hover:text-indigo-800 bg-green-500 font-semibold py-2 px-4">
-                      Open
+                      Otvoriť
                     </button>
                     <button onClick={() => handleDeleteProject(project.id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">
-                      Delete
+                      Vymazať
                     </button>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-200 text-xl">No projects found.</p>
+              <p className="text-gray-200 text-xl">Nebol ešte vytvorený projekt.</p>
             )}
           </div>
         </div>
