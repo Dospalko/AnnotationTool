@@ -80,7 +80,6 @@ function PDFTokenViewer(props) {
       setCurrentSelection(new Set(selectedTokens.current));
     }
   };
-  
 
   const handleDragEnd = () => {
     if (dragStart.current && selectedTokens.current.size > 0) {
@@ -163,10 +162,18 @@ function PDFTokenViewer(props) {
         // Check if the current token has an annotation
         if (token.annotation) {
             // Check if there's a previous merged token and it belongs to the same annotation
-            const prevMergedToken = mergedTokens[mergedTokens.length - 1];
+            
+            const prevMergedToken = mergedTokens[mergedTokens.length];
             if (prevMergedToken && prevMergedToken.annotation && prevMergedToken.annotation.id === token.annotation.id) {
                 // If the previous merged token belongs to the same annotation, concatenate the current token with it
-                prevMergedToken.text += token.word;
+                if (/^[a-z]/.test(token.word)) {
+                    prevMergedToken.text += token.word;
+                } else {
+                    mergedTokens.push({
+                        text: token.word,
+                        annotation: token.annotation
+                    });
+                }
             } else {
                 // If there's no previous merged token or it belongs to a different annotation, start a new merged token
                 mergedTokens.push({
@@ -224,7 +231,6 @@ function PDFTokenViewer(props) {
         );
     });
 }, [tokens, currentSelection]);
-
 
 
   
