@@ -5,24 +5,56 @@ import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import Modal from "./Modal";
 
+import { ThreeDots } from "react-loader-spinner";
 const ProjectDetail = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [projectFiles, setProjectFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('SlovakBert');
-
+  const [selectedModel, setSelectedModel] = useState("SlovakBert");
+  const [isLoading, setIsLoading] = useState(false);
   // Define your model options here
-  const modelOptions = ['SlovakBert']; // Add more models as needed
+  const modelOptions = ["SlovakBert"]; // Add more models as needed
+  const [selectedJSONLFile, setSelectedJSONLFile] = useState(null);
 
+  const handleJSONLFileChange = (event) => {
+    setSelectedJSONLFile(event.target.files[0]);
+  };
+
+  const uploadJSONLFile = async () => {
+    if (!selectedJSONLFile) {
+      alert("Please select a JSONL file to upload.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("jsonl_file", selectedJSONLFile);
+    setIsLoading(true); // Show the loader
+    try {
+      const response = await axios.post(
+        `http://localhost:5000/upload_jsonl_to_project/${projectId}`,
+        formData
+      );
+      alert("JSONL file processed successfully.");
+      console.log(response.data); // Optionally process data
+      setSelectedJSONLFile(null); // Clear the selected file
+    } catch (error) {
+      alert("Failed to upload JSONL file.");
+      console.error("Error uploading JSONL:", error);
+    } finally {
+      setIsLoading(false); // Hide the loader
+    }
+  };
   const [projectName, setProjectName] = useState("");
+
   useEffect(() => {
     fetchProjectDetails();
     fetchFilesOverview();
   }, [projectId]);
 
   const fetchFilesOverview = async () => {
+    setIsLoading(true);
     try {
       const overviewResponse = await axios.get(
         `http://localhost:5000/api/files-overview`
@@ -55,6 +87,8 @@ const ProjectDetail = () => {
       setProjectFiles(combinedFilesData);
     } catch (error) {
       console.error("Error fetching project files and overview:", error);
+    } finally {
+      setIsLoading(false); // Stop loading after the fetch
     }
   };
   const fetchProjectDetails = async () => {
@@ -79,7 +113,7 @@ const ProjectDetail = () => {
       return;
     }
 
-    const allowedExtensions = [".pdf", ".docx", ".txt"];
+    const allowedExtensions = [".pdf", ".docx", ".txt", ".jsonl"];
     const invalidFiles = Array.from(selectedFiles).filter(
       (file) => !allowedExtensions.includes(file.name.slice(-4).toLowerCase())
     );
@@ -107,6 +141,19 @@ const ProjectDetail = () => {
       console.error("Zlyhanie nahratia súborov:", error);
     }
   };
+  const deleteAllFiles = async () => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:5000/delete_all_files_in_project/${projectId}`
+      );
+      alert("All files deleted successfully.");
+      setProjectFiles([]); // Clear the state holding the files
+    } catch (error) {
+      alert("Failed to delete files.");
+      console.error("Error deleting files:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -115,7 +162,12 @@ const ProjectDetail = () => {
           <h2 className="text-2xl font-semibold mb-4">
             Detaily projektu: {projectName}
           </h2>
-
+          <button
+            onClick={deleteAllFiles}
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mb-4"
+          >
+            Delete All Files
+          </button>
           <input
             type="file"
             multiple
@@ -134,6 +186,19 @@ const ProjectDetail = () => {
               onCancel={() => setShowModal(false)}
             />
           )}
+          <input
+            type="file"
+            accept=".jsonl"
+            onChange={handleJSONLFileChange}
+            className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"
+          />
+          <button
+            onClick={uploadJSONLFile}
+            className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Upload JSONL File
+          </button>
+          {isLoading && <ThreeDots />} {/* Display the Spinner when loading */}
           <div className="mt-6">
             {projectFiles.map((file) => (
               <div
@@ -142,6 +207,26 @@ const ProjectDetail = () => {
               >
                 <div>
                   <h3 className="font-medium text-gray-800">{file.filename}</h3>
+                  {file.filename.endsWith(".pdf") && (
+                    <div>
+                      <label className="mr-4">
+                        <input type="checkbox" /> Bold
+                      </label>
+                      <label className="mr-4">
+                        <input type="checkbox" /> Italic
+                      </label>
+                      <label className="mr-4">
+                        <input type="checkbox" /> Colored
+                      </label>
+                      <label className="mr-4">
+                        <input type="checkbox" /> Sized
+                      </label>
+                      <label className="mr-4">
+                        <input type="checkbox" /> Smaller Size
+                      </label>
+                      
+                    </div>
+                  )}
                   <p>Total Tokens: {file.tokensCount}</p>
                   <p>Annotated Tokens: {file.annotatedTokensCount}</p>
                   <p>Unique Annotations: {file.uniqueAnnotationsCount}</p>

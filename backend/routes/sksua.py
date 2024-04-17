@@ -1,3 +1,21 @@
+def tokenize_text(text, pdf_text_id):
+    tokens = []
+    start = 0
+    for line in text.splitlines(keepends=True):  # keepends will keep the newline characters
+        words = re.findall(r'\S+|\n', line)  # This regex will separate words and newlines
+        for word in words:
+            if word == '\n':  # Treat newline as a special token
+                tokens.append(Token(word=word, start=start, end=start+1, pdf_text_id=pdf_text_id))
+                start += 1
+            else:
+                end = start + len(word)
+                tokens.append(Token(word=word, start=start, end=end, pdf_text_id=pdf_text_id))
+                start = end
+        if not line.endswith('\n'):
+            start += 1  # Account for spaces after lines without a newline
+    return tokens
+
+
 # Assuming this is in a new file: routes/project_routes.py
 from flask import Blueprint, request, jsonify
 from models.project import Project
@@ -103,8 +121,8 @@ def upload_files_to_project(project_id):
             continue  # Skip files with invalid formats
 
         if file_extension == '.pdf':
+            
             text = extract_text_with_formatting(uploaded_file.stream)
-            text = extract_text_line_by_line_with_styles(uploaded_file.stream, True, True, True, True, True, False)
             print(text)
         elif file_extension == '.docx':
             text = extract_text_from_docx(uploaded_file.stream)
@@ -156,15 +174,3 @@ def delete_project(project_id):
     db.session.commit()
     return jsonify({'message': 'Project deleted successfully'}), 200
 
-def normalize_spaces_preserve_tags(text):
-    # This regex pattern will match anything outside of the special tags
-    pattern = r'(?!<[/]?[a-z]+>).*'
-    normalized_text = ''
-
-    # Find all text outside of special tags
-    for match in re.finditer(pattern, text, re.DOTALL):
-        # Normalize spaces in the matched text
-        normalized_text += re.sub(r'\s+', ' ', match.group(0))
-
-    # Reconstruct the text with normalized spaces and original tags
-    return re.sub(pattern, lambda m: normalized_text, text)

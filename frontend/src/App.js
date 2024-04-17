@@ -9,6 +9,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import FilesOverviewPage from "./pages/FilesOverviewPage";
 import ProjectDetailPage from "./pages/ProjectDetailPage";
+import CreateProject from "./pages/CreateProject";
 
 AOS.init({
   duration: 1200,

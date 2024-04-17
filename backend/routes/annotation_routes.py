@@ -14,8 +14,10 @@ from dicttoxml import dicttoxml
 from io import StringIO
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import Element, SubElement, tostring
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer, AutoModelForTokenClassification
 
+from collections import defaultdict
+    
 annotation_routes = Blueprint('annotation_routes', __name__)
 
 
@@ -25,16 +27,31 @@ entity_color_map = {
     'I-OSOBA': '#FF5733',  # Same type, same color
     'B-ORGANIZÁCIA': '#33FF57',  # Example: green
     'I-ORGANIZÁCIA': '#33FF57',  # Same type, same color
-    'B-LOKALITA': '#3357FF',  # Example: blue
-    'I-LOKALITA': '#3357FF',  # Same type, same color
-    # Add other types as needed
+    'B-LOKALITA': '#3357FF',  
+    'I-LOKALITA': '#3357FF',  
 }
 ner_models = {
     'bertz': 'crabz/slovakbert-ner',
-    'conll': 'ju-bezdek/slovakbert-conll2003-sk-ner'
 }
+tokenizer = AutoTokenizer.from_pretrained("crabz/slovakbert-ner", add_prefix_space=True)
+model = AutoModelForTokenClassification.from_pretrained("crabz/slovakbert-ner")
 
-ner_pipeline = pipeline('ner', model='crabz/slovakbert-ner')
+# Define your special tokens
+special_tokens = [
+    "<bold>", "</bold>", "<nbold>", "</nbold>",
+    "<size>", "</size>", "<nsize>", "</nsize>",
+    "<color>", "</color>", "<ncolor>", "</ncolor>",
+    "<italic>", "</italic>", "<nitalic>", "</nitalic>",
+]
+
+# Add special tokens to the tokenizer
+tokenizer.add_tokens(special_tokens)
+
+# Resize the model's token embeddings to account for the new tokens
+model.resize_token_embeddings(len(tokenizer))
+
+# Create a new NER pipeline using the updated model and tokenizer
+ner_pipeline = pipeline('ner', model=model, tokenizer=tokenizer)
 def annotate_texts_with_ner(pdf_text_id):
     pdf_text = PdfText.query.get(pdf_text_id)
     if not pdf_text:
@@ -43,58 +60,46 @@ def annotate_texts_with_ner(pdf_text_id):
     # Get NER annotations
     ner_annotations = ner_pipeline(pdf_text.text)
 
-    # Sort annotations by start index for sequential processing
-    ner_annotations_sorted = sorted(ner_annotations, key=lambda ann: ann['start'])
-
-    # Convert NER results to a set of start-end tuples for quick lookup
-    annotated_spans = {(ann['start'], ann['end']): ner_map.get(ann['entity'], '0') for ann in ner_annotations_sorted}
-
+    # Start from the beginning of the text
     last_index = 0
-    for start, end in annotated_spans:
-        # Handle text before the current entity
-        if start > last_index:
-            create_tokens_for_intermediate_text(pdf_text.text[last_index:start], last_index, pdf_text.id, None)
+    current_text = ''
+    for ann in ner_annotations:
+        # Append current word to form whole tokens; handle subword tokenization by checking for full words
+        if ann['word'].startswith('Ġ'):
+            # If it starts with 'Ġ', it's a new word
+            if current_text:
+                # Process the previous accumulated text if there is any
+                process_token(current_text, last_index, last_index + len(current_text), pdf_text.id, current_annotation)
+            # Reset for new word
+            current_text = ann['word'][1:]  # Remove the 'Ġ' for clean text
+            last_index = ann['start']  # Update the start index to current word's start
+            current_annotation = get_annotation_id(ner_map.get(ann['entity'], '0'))
+        else:
+            # Continue appending to form a full word from subwords
+            current_text += ann['word']
 
-        # Handle the entity itself
-        entity_label = annotated_spans[(start, end)]
-        color = entity_color_map.get(entity_label, None)  # Get the color for the entity type
-        annotation_id = None
-        if entity_label != '0':  
-            annotation = Annotation.query.filter_by(text=entity_label).first()
-            if not annotation:
-                annotation = Annotation(text=entity_label, color=color)
-                db.session.add(annotation)
-                db.session.flush()  # This will assign an ID to the new annotation
-            annotation_id = annotation.id
-
-        # Add the token for the current entity
-        token_text = pdf_text.text[start:end]
-        create_token(token_text, start, end, pdf_text.id, annotation_id)
-
-        # Update the last index
-        last_index = end
-
-    # Handle any text after the last annotation
-    if last_index < len(pdf_text.text):
-        create_tokens_for_intermediate_text(pdf_text.text[last_index:], last_index, pdf_text.id, None)
+    # Process any remaining text
+    if current_text:
+        process_token(current_text, last_index, last_index + len(current_text), pdf_text.id, current_annotation)
 
     db.session.commit()
-    return "Tokenization and annotation completed successfully.", 200
+    return "Tokenization and annotation completed successfully."
 
-def create_tokens_for_intermediate_text(text, offset, pdf_text_id, annotation_id):
-    # Create tokens for intermediate non-entity text
-    intermediate_tokens = text.split()  # Naive split by whitespace
-    index = offset
-    for word in intermediate_tokens:
-        start = index + text[index-offset:].find(word)
-        end = start + len(word)
-        create_token(word, start, end, pdf_text_id, annotation_id)
-        index = end + 1  # Skip over the space after the word
-
-def create_token(word, start, end, pdf_text_id, annotation_id):
+def process_token(word, start, end, pdf_text_id, annotation_id):
     new_token = Token(word=word, start=start, end=end, pdf_text_id=pdf_text_id, annotation_id=annotation_id)
     db.session.add(new_token)
 
+def get_annotation_id(entity_label):
+    if entity_label == '0':  # Assume '0' means no annotation
+        return None
+    annotation = Annotation.query.filter_by(text=entity_label).first()
+    if not annotation:
+        # Assume entity_label is actually a label like 'B-OSOBA', not an ID
+        color = entity_color_map.get(entity_label)
+        annotation = Annotation(text=entity_label, color=color)
+        db.session.add(annotation)
+        db.session.flush()  # This assigns an ID to the new annotation
+    return annotation.id
 
 @annotation_routes.route('/assign_annotation', methods=['POST'])
 def assign_annotation():

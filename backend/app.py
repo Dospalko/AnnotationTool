@@ -22,11 +22,11 @@ def create_app(config_class=DevelopmentConfig):
     from routes.annotation_routes import annotation_routes
     from routes.pdf_routes import pdf_routes
     from routes.project_routes import project_routes
-    from routes.model_upload_routes import model_upload_routes
+    from routes.extract import extract_routes
     app.register_blueprint(annotation_routes)
     app.register_blueprint(pdf_routes)
     app.register_blueprint(project_routes)
-    app.register_blueprint(model_upload_routes)
+    app.register_blueprint(extract_routes)
     return app
 
 if __name__ == '__main__':

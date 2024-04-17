@@ -10,37 +10,11 @@ from docx import Document
 import os
 from routes.annotation_routes import annotate_texts_with_ner
 from models.project import Project
+import json
+from flask import Response,json
+
 pdf_routes = Blueprint('pdf_routes', __name__)
 
-@pdf_routes.route('/upload_file', methods=['POST'])
-def upload_file():
-    uploaded_file = request.files.get('file')
-    if uploaded_file:
-        filename = uploaded_file.filename
-        file_extension = os.path.splitext(filename)[1]
-        text = ''
-
-        if file_extension == '.pdf':
-            pdf_reader = PdfReader(uploaded_file.stream)
-            text = ' '.join(page.extract_text() for page in pdf_reader.pages if page.extract_text())
-
-        elif file_extension == '.docx':
-            doc = Document(uploaded_file.stream)
-            text = ' '.join(p.text for p in doc.paragraphs)
-
-        elif file_extension == '.txt':
-            text = uploaded_file.stream.read().decode('utf-8')
-
-        else:
-            return jsonify({"error": "Invalid file format."}), 400
-
-        text = re.sub(r'\s+', ' ', text).strip()
-        new_pdf_text = PdfText(text, filename)
-        db.session.add(new_pdf_text)
-        db.session.commit()
-
-        return jsonify({"message": "File uploaded and text extracted."}), 201
-    
 
 @pdf_routes.route('/api/files-overview', methods=['GET'])
 def get_files_overview():
@@ -75,33 +49,83 @@ def get_files_overview():
 @pdf_routes.route('/tokenize_pdf/<int:pdf_text_id>', methods=['GET'])
 def tokenize_pdf(pdf_text_id):
     pdf_text_record = PdfText.query.get_or_404(pdf_text_id)
-
-    # Check if the text has been tokenized already
     existing_tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
-    
-    # If no tokens exist, perform tokenization and annotation
+
     if not existing_tokens:
-        # Perform NER and tokenization
-        annotate_texts_with_ner(pdf_text_id)
+        tokens = tokenize_text(pdf_text_record.text, pdf_text_id)
+        db.session.add_all(tokens)
+        db.session.commit()
 
-        # Fetch all tokens again after NER and tokenization
-        existing_tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
+    existing_tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
+    tokens_data = format_token_data(existing_tokens)
+    print(tokens_data)
+    return jsonify(tokens_data), 200
 
-    # Now existing_tokens contains all tokens, including those not annotated
-    sorted_tokens = sorted(existing_tokens, key=lambda token: token.start)
-    return jsonify([{
-        'id': token.id, 
-        'word': token.word, 
-        'start': token.start, 
-        'end': token.end, 
-        'annotation_id': token.annotation_id,
-        'annotation': {
-            'id': token.annotation.id,
-            'text': token.annotation.text,
-            'color': token.annotation.color,
-            'favorite': token.annotation.favorite
-        } if token.annotation else None
-    } for token in sorted_tokens])
+def tokenize_text(text, pdf_text_id):
+    tokens = []
+    start = 0
+    inside_special_tag = False
+
+    special_tags = {"<bold>", "</bold>", "<nbold>", "</nbold>",
+                    "<size>", "</size>", "<nsize>", "</nsize>",
+                    "<color>", "</color>", "<ncolor>", "</ncolor>",
+                    "<italic>", "</italic>", "<nitalic>", "</nitalic>"}
+
+    # We add a whitespace after the special tag to ensure it is tokenized separately.
+    for tag in special_tags:
+        text = text.replace(tag, tag + " ")
+
+    words_and_tags = re.split(r'(\s+)', text)  # This regex will separate words and whitespaces
+
+    for token in words_and_tags:
+        if token in special_tags:
+            if token.startswith("</"):
+                inside_special_tag = False
+            else:
+                inside_special_tag = True
+
+        if token.strip() or token == '\n':  # This will skip empty strings but include newlines
+            end = start + len(token)
+
+            # Skip newlines if inside a special tag
+            if inside_special_tag and token == '\n':
+                continue
+            
+            # Add the token to the list, handling the special case for '\n'
+            if token == '\n':
+                # Preserve the line break in the token list
+                tokens.append(Token(word=token, start=start, end=end, pdf_text_id=pdf_text_id))
+            else:
+                # Split the token further if it's not a newline to get words separately
+                sub_tokens = re.findall(r'\S+|\n', token)
+                for sub_token in sub_tokens:
+                    sub_end = start + len(sub_token)
+                    tokens.append(Token(word=sub_token, start=start, end=sub_end, pdf_text_id=pdf_text_id))
+                    start = sub_end
+            # Update the start for the next token
+            start = end
+
+    return tokens
+
+
+def format_token_data(tokens):
+    """Format token data for JSON response, including annotation details."""
+    return [
+        {
+            'id': token.id,
+            'word': token.word,
+            'start': token.start,
+            'end': token.end,
+            'annotation_id': token.annotation_id,
+            'annotation': {
+                'id': token.annotation.id,
+                'text': token.annotation.text,
+                'color': token.annotation.color,
+                'favorite': getattr(token.annotation, 'favorite', False)
+            } if token.annotation else None
+        }
+        for token in tokens
+    ]
 
 @pdf_routes.route('/save_tokens/<int:pdf_text_id>', methods=['POST'])
 def save_tokens(pdf_text_id):
@@ -123,28 +147,6 @@ def save_tokens(pdf_text_id):
 
     db.session.commit()
     return jsonify({"message": "Tokens updated successfully."}), 200
-
-
-@pdf_routes.route('/upload_pdf', methods=['POST'])
-def upload_pdf():
-    uploaded_file = request.files.get('file')
-    if uploaded_file and uploaded_file.filename.endswith('.pdf'):
-        pdf_reader = PdfReader(uploaded_file.stream)
-        text = ''
-        for page_num in range(len(pdf_reader.pages)):
-            page = pdf_reader.pages[page_num]
-            text += page.extract_text()
-
-        # Removing consecutive white spaces and replacing them with a single space
-        text = re.sub(r'\s+', ' ', text).strip()
-
-        new_pdf_text = PdfText(text, uploaded_file.filename)  # Save filename here
-        db.session.add(new_pdf_text)
-        db.session.commit()
-
-        return jsonify({"message": "PDF uploaded and text extracted."}), 201
-    else:
-        return jsonify({"error": "Invalid file format."}), 400
 
 
 @pdf_routes.route('/pdf_texts', methods=['GET'])

@@ -30,7 +30,7 @@ const Hero = () => {
         {/* First Button */}
         <div className="relative group p-1 " data-aos="zoom-in" data-aos-delay="400">
           <Link
-            to="/features"
+            to="/select"
             className="relative z-10 bg-white text-black py-4 px-12 uppercase border-black border-2 flex items-center"
           >
             {t('getStarted')} <FontAwesomeIcon icon={faArrowRight} className="ml-2" />

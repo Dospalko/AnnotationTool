@@ -102,10 +102,7 @@ const PdfTextDisplay = ({ pdfTexts, onDelete }) => {
           <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600" onClick={handleShowTokensToggle} disabled={loading}>
             {showTokenizedText ? t("Hide Tokens") : t("Show Tokens")}
           </button>
-          <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" onClick={handleDelete} disabled={loading}>
-            {t("Delete")}
-          </button>
-         
+       
         </div>
       )}
       {selectedPdfText && showText && !loading && (
