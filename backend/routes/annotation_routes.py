@@ -1,4 +1,5 @@
 
+import json
 from flask import jsonify, Blueprint, request, make_response, Response
 
 from models.pdf_text import PdfText  # Import the PdfText model here
@@ -125,90 +126,131 @@ def assign_annotation():
         print(f"Error: {e}")
         return jsonify({"error": "An internal error occurred"}), 500
 
-def generate_csv_data(annotations, style):
+
+
+def generate_csv_data(pdf_text_id):
+    # Fetch the PDF text based on the ID
+    pdf_text_record = PdfText.query.get(pdf_text_id)
+    if not pdf_text_record:
+        return jsonify({'error': "PDF text not found"}), 404
+
+    # Fetch annotations related to the PDF text
+    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id).order_by(Token.start.asc()).all()
+
     output = StringIO()
     writer = csv.writer(output)
 
-    if style == 'bio':
-        header = ['word', 'BIO', 'start', 'end']
-    else:  # 'normal' style
-        header = ['word', 'annotation']
-
+    # Writing header for CSV
+    header = ['document', 'id', 'tokens', 'ner_tags']
     writer.writerow(header)
 
-    for annotation in annotations:
-        if style == 'bio':
-            row = [annotation['word'], annotation['BIO'], annotation['start'], annotation['end']]
-        else:  # 'normal' style
-            row = [annotation['word'], annotation['annotation']]
-        writer.writerow(row)
+    # Initialize variables to keep track of the current line and token annotations
+    current_line_tokens = []
+    current_line_annotations = []
+    current_line_id = 1
+    for token in tokens:
+        if token.word == '\n':
+            # End of line found, write the current line to the CSV
+            # Formatting tokens and annotations as JSON strings with additional quotes and brackets
+            formatted_tokens = json.dumps(current_line_tokens).replace('"', "'")
+            formatted_annotations = json.dumps(current_line_annotations).replace('[', "['").replace(']', "']")
+            writer.writerow([pdf_text_id, current_line_id, formatted_tokens, formatted_annotations])
+            # Reset for the new line
+            current_line_tokens = []
+            current_line_annotations = []
+            current_line_id += 1
+        else:
+            # Add the current token to the line
+            current_line_tokens.append(token.word)
+            # Append the current token's annotation ID or 0 if no annotation exists
+            current_line_annotations.append(token.annotation_id if token.annotation_id else 0)
 
-    output.seek(0)
+    # Ensure any remaining tokens are written to the CSV if the document does not end with a newline
+    if current_line_tokens:
+        formatted_tokens = json.dumps(current_line_tokens).replace('"', "'")
+        formatted_annotations = json.dumps(current_line_annotations).replace('[', "['").replace(']', "']")
+        writer.writerow([pdf_text_id, current_line_id, formatted_tokens, formatted_annotations])
+
+    output.seek(0)  # Move to the beginning of the stream
     return output.getvalue()
+       
+
+       
 
 
-def generate_xml_data(annotations, style):
-    root = Element('annotations')
 
-    for annotation in annotations:
-        token_elem = SubElement(root, 'token')
-        SubElement(token_elem, 'word').text = annotation['word']
-        
-        if style == 'bio':
-            SubElement(token_elem, 'BIO').text = annotation['BIO']
-            SubElement(token_elem, 'start').text = str(annotation['start'])
-            SubElement(token_elem, 'end').text = str(annotation['end'])
-        else:  # 'normal' style
-            SubElement(token_elem, 'annotation').text = annotation['annotation']
+def generate_jsonl_data(pdf_text_id):
+    # Fetch the PDF text based on the ID
+    pdf_text_record = PdfText.query.get(pdf_text_id)
+    if not pdf_text_record:
+        return jsonify({'error': "PDF text not found"}), 404
 
-    xml_str = tostring(root, 'utf-8')
-    parsed_xml = parseString(xml_str)
-    return parsed_xml.toprettyxml(indent="  ")
+    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id).order_by(Token.start.asc()).all()
+    if not tokens:
+        return jsonify({'error': "No tokens found for the given PDF text ID"}), 404
+
+    # Initialize variables to keep track of the full text and annotations
+    full_text = ''
+    labels = []
+    offset = 0  # Start offset for labels
+    output = StringIO()
+
+    for token in tokens:
+        if token.annotation_id:
+            # Retrieve the annotation
+            annotation = Annotation.query.get(token.annotation_id)
+            if annotation:
+                # Create a label for JSONL output
+                labels.append({
+                    'start': offset,
+                    'end': offset + len(token.word),
+                    'label': annotation.text
+                })
+        # Append token word to full text and update offset
+        full_text += token.word + " "
+        offset += len(token.word) + 1  # Update offset for spaces
+
+    # JSONL formatted string for each line/document
+    jsonl_data = {
+        'id': pdf_text_id,
+        'text': full_text.strip(),
+        'labels': labels,
+        'Comments': []
+    }
+    # Write JSONL data to output buffer
+    output.write(json.dumps(jsonl_data) + '\n')
+
+    output.seek(0)  # Move to the beginning of the stream
+    return Response(
+        output.getvalue(),
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment;filename={pdf_text_id}_annotations.jsonl'}
+    )
+
 
 @annotation_routes.route('/export_annotations/<int:pdf_text_id>', methods=['GET'])
 def export_annotations(pdf_text_id):
     style = request.args.get('style', 'normal')
     format_type = request.args.get('format', 'json')
-
-    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id).all()
-    if not tokens:
-        return jsonify({'error': 'No tokens found for the given PDF text ID'}), 404
-
-    exported_annotations = []
-
-    if style == 'bio':
-        previous_tag = "O"
-        for token in tokens:
-            bio_tag = "O"
-            annotation = Annotation.query.get(token.annotation_id).text if token.annotation_id else None
-            if annotation:
-                bio_tag = "B-" + annotation if previous_tag != annotation else "I-" + annotation
-            exported_annotations.append({
-                'word': token.word,
-                'BIO': bio_tag,
-                'start': str(token.start),
-                'end': str(token.end)
-            })
-            previous_tag = annotation or "O"
-    else:  # Normal style
-        for token in tokens:
-            annotation_text = Annotation.query.get(token.annotation_id).text if token.annotation_id else "O"
-            exported_annotations.append({
-                'word': token.word,
-                'annotation': annotation_text
-            })
-
-    # Generate export based on the format
+    # Export annotations based on the requested format and style
     if format_type == 'json':
-        return jsonify(exported_annotations)
+        return generate_jsonl_data(pdf_text_id)
+        pass
     elif format_type == 'csv':
-        csv_data = generate_csv_data(exported_annotations, style)
-        return Response(csv_data, mimetype='text/csv', headers={"Content-Disposition": "attachment;filename=annotations.csv"})
+        if style == 'bio':
+            # Call the function that generates 'bio' style CSV data
+            csv_data = generate_csv_data(pdf_text_id)
+            return Response(csv_data, mimetype='text/csv', headers={"Content-Disposition": f"attachment;filename=annotations_{pdf_text_id}.csv"})
+        else:
+            # Handle 'normal' style CSV export if necessary
+            pass
     elif format_type == 'xml':
-        xml_data = generate_xml_data(exported_annotations, style)
-        return Response(xml_data, mimetype='application/xml', headers={"Content-Disposition": "attachment;filename=annotations.xml"})
+        # XML export logic (not shown for brevity)
+        pass
     else:
         return jsonify({'error': 'Invalid export format'}), 400
+
+    
 
 
 @annotation_routes.route('/add', methods=['POST'])

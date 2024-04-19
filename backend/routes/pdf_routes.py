@@ -49,14 +49,14 @@ def get_files_overview():
 @pdf_routes.route('/tokenize_pdf/<int:pdf_text_id>', methods=['GET'])
 def tokenize_pdf(pdf_text_id):
     pdf_text_record = PdfText.query.get_or_404(pdf_text_id)
-    existing_tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
+    existing_tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).order_by(Token.start.asc()).all()  # Order by start position
 
     if not existing_tokens:
         tokens = tokenize_text(pdf_text_record.text, pdf_text_id)
         db.session.add_all(tokens)
         db.session.commit()
+        existing_tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).order_by(Token.start.asc()).all()  # Fetch again ordered
 
-    existing_tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).all()
     tokens_data = format_token_data(existing_tokens)
     print(tokens_data)
     return jsonify(tokens_data), 200
@@ -66,47 +66,23 @@ def tokenize_text(text, pdf_text_id):
     start = 0
     inside_special_tag = False
 
-    special_tags = {"<bold>", "</bold>", "<nbold>", "</nbold>",
-                    "<size>", "</size>", "<nsize>", "</nsize>",
-                    "<color>", "</color>", "<ncolor>", "</ncolor>",
-                    "<italic>", "</italic>", "<nitalic>", "</nitalic>"}
+    # Update the regex pattern to capture colons as separate tokens
+    pattern = re.compile(r'(<\/?[a-z]+>|[^\s<:]+|:|\s+|\n)')
 
-    # We add a whitespace after the special tag to ensure it is tokenized separately.
-    for tag in special_tags:
-        text = text.replace(tag, tag + " ")
+    for match in pattern.finditer(text):
+        token_text = match.group()
+        end = start + len(token_text)
 
-    words_and_tags = re.split(r'(\s+)', text)  # This regex will separate words and whitespaces
+        if '<' in token_text and token_text.endswith('>'):
+            # Check if the token is a special tag and update the inside_special_tag flag
+            inside_special_tag = not token_text.startswith('</')
 
-    for token in words_and_tags:
-        if token in special_tags:
-            if token.startswith("</"):
-                inside_special_tag = False
-            else:
-                inside_special_tag = True
-
-        if token.strip() or token == '\n':  # This will skip empty strings but include newlines
-            end = start + len(token)
-
-            # Skip newlines if inside a special tag
-            if inside_special_tag and token == '\n':
-                continue
-            
-            # Add the token to the list, handling the special case for '\n'
-            if token == '\n':
-                # Preserve the line break in the token list
-                tokens.append(Token(word=token, start=start, end=end, pdf_text_id=pdf_text_id))
-            else:
-                # Split the token further if it's not a newline to get words separately
-                sub_tokens = re.findall(r'\S+|\n', token)
-                for sub_token in sub_tokens:
-                    sub_end = start + len(sub_token)
-                    tokens.append(Token(word=sub_token, start=start, end=sub_end, pdf_text_id=pdf_text_id))
-                    start = sub_end
-            # Update the start for the next token
-            start = end
+        if token_text.strip() or token_text == '\n':  # Non-empty or newline token
+            tokens.append(Token(word=token_text, start=start, end=end, pdf_text_id=pdf_text_id))
+        
+        start = end  # Move start to the next position
 
     return tokens
-
 
 def format_token_data(tokens):
     """Format token data for JSON response, including annotation details."""

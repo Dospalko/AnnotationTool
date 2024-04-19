@@ -103,7 +103,7 @@ def upload_files_to_project(project_id):
             continue  # Skip files with invalid formats
 
         if file_extension == '.pdf':
-            text = extract_text_with_formatting(uploaded_file.stream)
+            text = extract_text(uploaded_file.stream)
             text = extract_text_line_by_line_with_styles(uploaded_file.stream, True, True, True, True, True, False)
             print(text)
         elif file_extension == '.docx':
@@ -112,7 +112,7 @@ def upload_files_to_project(project_id):
             text = uploaded_file.stream.read().decode('utf-8')
 
         # Normalize whitespaces while preserving lines
-        text = preprocess_text(text)
+        text = pre_process(text)
 
         new_pdf_text = PdfText(text=text, filename=filename, project_id=project_id)
         db.session.add(new_pdf_text)
@@ -145,9 +145,7 @@ def extract_text_from_docx(stream):
     doc = Document(stream)
     return '\n'.join(paragraph.text for paragraph in doc.paragraphs)
 
-def preprocess_text(text):
-    """Normalize spaces and preserve new lines."""
-    return '\n'.join(' '.join(line.split()) for line in text.splitlines())
+
 
 @project_routes.route('/projects/<int:project_id>', methods=['DELETE'])
 def delete_project(project_id):
@@ -156,15 +154,3 @@ def delete_project(project_id):
     db.session.commit()
     return jsonify({'message': 'Project deleted successfully'}), 200
 
-def normalize_spaces_preserve_tags(text):
-    # This regex pattern will match anything outside of the special tags
-    pattern = r'(?!<[/]?[a-z]+>).*'
-    normalized_text = ''
-
-    # Find all text outside of special tags
-    for match in re.finditer(pattern, text, re.DOTALL):
-        # Normalize spaces in the matched text
-        normalized_text += re.sub(r'\s+', ' ', match.group(0))
-
-    # Reconstruct the text with normalized spaces and original tags
-    return re.sub(pattern, lambda m: normalized_text, text)
