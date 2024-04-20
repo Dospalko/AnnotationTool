@@ -260,26 +260,7 @@ const handleUploadFiles = async (options) => {
                     ></div>
                   </div>
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="model-selection"
-                    className="block mb-2 text-sm font-medium text-gray-900"
-                  >
-                    Select a Model
-                  </label>
-                  <select
-                    id="model-selection"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                  >
-                    {modelOptions.map((model) => (
-                      <option key={model} value={model}>
-                        {model}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              
                 <div className="flex space-x-2">
                   <button
                     onClick={() => navigate(`/annotator/${file.id}`)}

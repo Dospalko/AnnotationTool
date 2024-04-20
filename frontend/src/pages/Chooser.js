@@ -47,7 +47,7 @@ const Chooser = () => {
                     </Link>
                   </div>
                   <div className="px-6 py-4 bg-gray-100 flex justify-end">
-                    <button onClick={() => navigate(`/projects/${project.id}`)} className="text-indigo-600 hover:text-indigo-800 bg-green-500 font-semibold py-2 px-4">
+                    <button onClick={() => navigate(`/projects/${project.id}`)} className="text-white bg-green-500 font-semibold py-2 px-4">
                       Otvoriť
                     </button>
                     <button onClick={() => handleDeleteProject(project.id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">
