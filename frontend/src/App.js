@@ -2,14 +2,12 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import { TailSpin } from "react-loader-spinner";
 import HomePage from "./pages/HomePage";
-import FeaturesPage from "./pages/FeaturesPage";
 import Annotator from "./pages/Annotator";
 import Chooser from "./pages/Chooser";
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import FilesOverviewPage from "./pages/FilesOverviewPage";
 import ProjectDetailPage from "./pages/ProjectDetailPage";
-import CreateProject from "./pages/CreateProject";
+
 
 AOS.init({
   duration: 1200,
@@ -20,12 +18,10 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<PageLoader><HomePage /></PageLoader>} />
-        <Route path="/features" element={<PageLoader><FeaturesPage /></PageLoader>} />
         <Route path="/annotator/:fileId" element={<PageLoader><Annotator /></PageLoader>} />
         <Route path="/select" element={<PageLoader><Chooser /></PageLoader>} />
-        <Route path="/files" element={<PageLoader><FilesOverviewPage /></PageLoader>} />
         <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-     
+    
       </Routes>
     </Router>
   );

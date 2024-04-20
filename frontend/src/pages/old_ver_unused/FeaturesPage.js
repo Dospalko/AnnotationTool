@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Header from "../components/Header/Header";
-import Footer from "../components/Footer/Footer";
+import Header from "../../components/Header/Header";
+import Footer from "../../components/Footer/Footer";
 
-import PdfUpload from "../components/annotation/PdfUpload";
+import PdfUpload from "../../components/annotation/PdfUpload";
 
-import PdfTextDisplay from "../components/annotation/PdfTextDisplay";
+import PdfTextDisplay from "../../components/annotation/PdfTextDisplay";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faSearch } from "@fortawesome/free-solid-svg-icons";
 import Particles from "react-tsparticles";

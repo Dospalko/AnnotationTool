@@ -84,7 +84,6 @@ function ExportAnnotationsButton({ pdfTextId }) {
             <select onChange={(e) => setExportFormat(e.target.value)} className="mb-4 p-2 border border-gray-300 rounded">
               <option value="json">JSON</option>
               <option value="csv">CSV</option>
-              <option value="xml">XML</option>
             </select>
             <select onChange={(e) => setExportStyle(e.target.value)} className="mb-4 p-2 border border-gray-300 rounded">
               <option value="normal">Normal</option>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { TailSpin } from "react-loader-spinner";
-import Header from "../components/Header/Header";
+import Header from "../../components/Header/Header";
 import { Link } from "react-router-dom";
-import Footer from "../components/Footer/Footer";
+import Footer from "../../components/Footer/Footer";
 
 const FilesOverviewPage = () => {
   const [filesData, setFilesData] = useState([]);

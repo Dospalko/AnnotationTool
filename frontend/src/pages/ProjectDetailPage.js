@@ -17,6 +17,7 @@ const ProjectDetail = () => {
   // Define your model options here
   const modelOptions = ["SlovakBert"]; // Add more models as needed
   const [selectedJSONLFile, setSelectedJSONLFile] = useState(null);
+  const [selectedImportFile, setSelectedImportFile] = useState(null);
 
   const handleJSONLFileChange = (event) => {
     setSelectedJSONLFile(event.target.files[0]);
@@ -107,40 +108,34 @@ const ProjectDetail = () => {
     setSelectedFiles(event.target.files);
   };
 
-  const handleUploadFiles = async () => {
+  const [extractionOptions, setExtractionOptions] = useState({
+    bold: false,
+    italic: false,
+    colored: false,
+    sized: false,
+    ssized: false
+});
+
+const handleUploadFiles = async (options) => {
     if (selectedFiles.length === 0) {
-      alert("Prosím zvoľte aspoň jeden súbor na nahratie.");
-      return;
-    }
-
-    const allowedExtensions = [".pdf", ".docx", ".txt", ".jsonl"];
-    const invalidFiles = Array.from(selectedFiles).filter(
-      (file) => !allowedExtensions.includes(file.name.slice(-4).toLowerCase())
-    );
-
-    if (invalidFiles.length > 0) {
-      const invalidFileNames = invalidFiles.map((file) => file.name).join(", ");
-      alert(
-        `Neplatné súbory: ${invalidFileNames}. Prosím nahrajte súbory len s priponami .pdf, .docx, or .txt.`
-      );
-      return;
+        alert("Please select at least one file to upload.");
+        return;
     }
 
     const formData = new FormData();
-    Array.from(selectedFiles).forEach((file) => formData.append("files", file));
+    Array.from(selectedFiles).forEach(file => formData.append("files", file));
+    formData.append("extractionOptions", JSON.stringify(options)); // Send options as JSON
 
     try {
-      await axios.post(
-        `http://localhost:5000/upload_files_to_project/${projectId}`,
-        formData
-      );
-      setShowModal(false);
-      alert("Súbory sa nahrali úspešne.");
-      fetchFilesOverview(); // Refetch
+        const response = await axios.post(`http://localhost:5000/upload_files_to_project/${projectId}`, formData);
+        alert("Files uploaded successfully.");
+        setShowModal(false); // Close the modal
+        fetchFilesOverview(); // Refresh files list
     } catch (error) {
-      console.error("Zlyhanie nahratia súborov:", error);
+        console.error("Failed to upload files:", error);
+        alert("Error uploading files.");
     }
-  };
+};
   const deleteAllFiles = async () => {
     try {
       const response = await axios.delete(
@@ -153,51 +148,95 @@ const ProjectDetail = () => {
       console.error("Error deleting files:", error);
     }
   };
+  const handleImportFileChange = (event) => {
+    setSelectedImportFile(event.target.files[0]);
+  };
 
+  const handleImportFile = async () => {
+    if (!selectedImportFile) {
+      alert("Please select a file to import.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedImportFile);
+    setIsLoading(true);
+
+    try {
+      await axios.post(
+        `http://localhost:5000/import_annotated_text/${projectId}`,
+        formData
+      );
+      alert("File imported successfully.");
+      fetchFilesOverview(); // Refresh the list of files
+    } catch (error) {
+      alert("Failed to import file.");
+      console.error("Error importing file:", error);
+    } finally {
+      setIsLoading(false);
+      setSelectedImportFile(null); // Clear the selected file
+    }
+  };
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
-      <div className="flex-grow p-12 bg-gray-900">
-        <div className="max-w-4xl mx-auto shadow-lg rounded-lg bg-white text-black font-base p-6">
-          <h2 className="text-2xl font-semibold mb-4">
-            Detaily projektu: {projectName}
-          </h2>
-          <button
-            onClick={deleteAllFiles}
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mb-4"
-          >
-            Delete All Files
-          </button>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"
-          />
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Confirm Upload
-          </button>
-          {showModal && (
-            <Modal
-              onConfirm={handleUploadFiles}
-              onCancel={() => setShowModal(false)}
-            />
-          )}
-          <input
-            type="file"
-            accept=".jsonl"
-            onChange={handleJSONLFileChange}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"
-          />
-          <button
-            onClick={uploadJSONLFile}
-            className="bg-green-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Upload JSONL File
-          </button>
+  <Header />
+  <div className="flex-grow p-12 bg-gray-900">
+    <div className="max-w-4xl mx-auto shadow-lg rounded-lg bg-white text-black font-base p-6">
+      <h2 className="text-2xl font-semibold mb-4">
+        Detaily projektu: {projectName}
+      </h2>
+      <div className="flex flex-col">
+      <input
+        type="file"
+        onChange={handleImportFileChange}
+        className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"
+      />
+      <button
+        onClick={handleImportFile}
+        className="w-full sm:w-auto bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4"
+      >
+        Import Annotated File
+      </button>
+      {isLoading && <ThreeDots />}
+      <input
+        type="file"
+        multiple
+        onChange={handleFileChange}
+        className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"
+      />
+      <button
+        onClick={() => setShowModal(true)}
+        className="w-full sm:w-auto bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Upload Files
+      </button>
+      {showModal && (
+        <Modal
+          onConfirm={handleUploadFiles}
+          extractionOptions={extractionOptions}
+          setExtractionOptions={setExtractionOptions}
+          onCancel={() => setShowModal(false)}
+        />
+      )}
+      <input
+        type="file"
+        accept=".jsonl"
+        onChange={handleJSONLFileChange}
+        className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"
+      />
+      <button
+        onClick={uploadJSONLFile}
+        className="w-full sm:w-auto bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Upload JSONL File
+      </button>
+      <button
+        onClick={deleteAllFiles}
+        className="w-full sm:w-auto bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mb-4"
+      >
+        Delete All Files
+      </button>
+      </div>
           {isLoading && <ThreeDots />} {/* Display the Spinner when loading */}
           <div className="mt-6">
             {projectFiles.map((file) => (
@@ -207,26 +246,7 @@ const ProjectDetail = () => {
               >
                 <div>
                   <h3 className="font-medium text-gray-800">{file.filename}</h3>
-                  {file.filename.endsWith(".pdf") && (
-                    <div>
-                      <label className="mr-4">
-                        <input type="checkbox" /> Bold
-                      </label>
-                      <label className="mr-4">
-                        <input type="checkbox" /> Italic
-                      </label>
-                      <label className="mr-4">
-                        <input type="checkbox" /> Colored
-                      </label>
-                      <label className="mr-4">
-                        <input type="checkbox" /> Sized
-                      </label>
-                      <label className="mr-4">
-                        <input type="checkbox" /> Smaller Size
-                      </label>
-                      
-                    </div>
-                  )}
+        
                   <p>Total Tokens: {file.tokensCount}</p>
                   <p>Annotated Tokens: {file.annotatedTokensCount}</p>
                   <p>Unique Annotations: {file.uniqueAnnotationsCount}</p>
