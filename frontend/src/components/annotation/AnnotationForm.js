@@ -92,7 +92,7 @@ const AnnotationForm = () => {
               type="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Enter annotation text"
+              placeholder="Vložte názov anotácie"
               className="w-full p-2 border rounded-md transition-opacity duration-300 hover:opacity-80"
               required
             />
@@ -114,7 +114,7 @@ const AnnotationForm = () => {
         </div>
       </form>
       <AnnotationsSection
-        title="Favorite Annotations"
+        title="Obľúbené anotácie"
         annotations={favoriteAnnotations}
         toggleFavorite={toggleFavorite}
         deleteAnnotation={deleteAnnotation}
@@ -122,7 +122,7 @@ const AnnotationForm = () => {
         handleEdit={handleEdit}
       />
       <AnnotationsSection
-        title="Other Annotations"
+        title="Ostatné anotácie"
         annotations={nonFavoriteAnnotations}
         toggleFavorite={toggleFavorite}
         deleteAnnotation={deleteAnnotation}

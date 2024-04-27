@@ -20,10 +20,10 @@ const Hero = () => {
   return (
     <div className="bg-cover bg-center bg-no-repeat font-base text-white h-screen flex flex-col justify-center items-center"
          style={{ backgroundImage: `url('/bg.png')` }}>
-      <h1 data-aos="fade-down" className="text-6xl p-4 bg-black mb-4 mt-0">
+      <h1 data-aos="fade-down" className="text-6xl text-center p-4 bg-black mb-4 mt-0">
         {t('heroTitle')}
       </h1>
-      <h2 data-aos="fade-up" data-aos-delay="200" className="text-3xl bg-black mb-8 p-4">
+      <h2 data-aos="fade-up" data-aos-delay="200" className="text-3xl text-center items-center bg-black mb-8 p-4">
         {t('heroSubtitle')}
       </h2>
       <div className="flex gap-[100px] text-xl">

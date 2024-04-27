@@ -9,12 +9,19 @@ function ExportAnnotationsButton({ pdfTextId }) {
   const [showExportModal, setShowExportModal] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const { t } = useTranslation();
-
+  const [alertInfo, setAlertInfo] = useState({ message: '', type: '' }); // Custom alert state
+ 
   useEffect(() => {
     initClient((isSignedInStatus) => {
       setIsSignedIn(isSignedInStatus);
     });
   }, []);
+
+  useEffect(() => {
+    // Auto-clear the alert after 5 seconds
+    const timer = setTimeout(() => setAlertInfo({ message: '', type: '' }), 5000);
+    return () => clearTimeout(timer);
+  }, [alertInfo]);
 
   const handleExportAnnotations = async (saveToDrive = false) => {
     try {
@@ -36,7 +43,8 @@ function ExportAnnotationsButton({ pdfTextId }) {
           body: form,
         });
 
-        alert('Saved to Google Drive');
+        setAlertInfo({ message: 'Súbor bol uložený na Google Drive.', type: 'success' });
+ 
       } else {
         const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
@@ -45,18 +53,25 @@ function ExportAnnotationsButton({ pdfTextId }) {
         document.body.appendChild(link);
         link.click();
         window.URL.revokeObjectURL(url);
+        setAlertInfo({ message: 'Súbor bol stiahnutý.', type: 'success' });
       }
       setShowExportModal(false);
     } catch (err) {
       console.error('Error exporting annotations:', err);
-      alert('Failed to export annotations. Please try again.');
+      setAlertInfo({ message: 'Zlyhalo exportovanie anotácií. Skúste to znova.', type: 'error' });
+  
     }
   };
 
   return (
     <>
+     {alertInfo.message && (
+        <div className={`fixed bottom-5 right-5 p-4 mb-4 rounded-md text-white ${alertInfo.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`} role="alert">
+          {alertInfo.message}
+        </div>
+      )}
       <button onClick={() => setShowExportModal(true)} className="my-8 ml-4 bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
-        {t('Export Annotations')}
+        Exportovať súbor
       </button>
       {showExportModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
@@ -68,10 +83,10 @@ function ExportAnnotationsButton({ pdfTextId }) {
               <option value="csv">CSV (BIO)</option>
             </select>
             <button onClick={() => handleExportAnnotations(false)} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
-              Download
+              Stiahnut
             </button>
             <button onClick={() => handleExportAnnotations(true)} className="ml-4 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
-              Save to Google Drive
+              Ulozit na drive
             </button>
             {!isSignedIn ? (
               <button onClick={signIn} className="ml-4 bg-orange-500 text-white p-2 rounded hover:bg-orange-600 transition duration-300">
