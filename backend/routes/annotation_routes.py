@@ -7,7 +7,7 @@ from models.token import Token
 from models.annotation import Annotation
 from models.relation import Relation
 from extensions import db
-from nltk.tokenize import word_tokenize
+
 import re
 from PyPDF2 import PdfReader
 import csv
@@ -15,92 +15,12 @@ from dicttoxml import dicttoxml
 from io import StringIO
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import Element, SubElement, tostring
-from transformers import pipeline, AutoTokenizer, AutoModelForTokenClassification
 
 from collections import defaultdict
     
 annotation_routes = Blueprint('annotation_routes', __name__)
 
 
-ner_map = {0: '0', 1: 'B-OSOBA', 2: 'I-OSOBA', 3: 'B-ORGANIZÁCIA', 4: 'I-ORGANIZÁCIA', 5: 'B-LOKALITA', 6: 'I-LOKALITA'}
-entity_color_map = {
-    'B-OSOBA': '#FF5733',  # Example: red
-    'I-OSOBA': '#FF5733',  # Same type, same color
-    'B-ORGANIZÁCIA': '#33FF57',  # Example: green
-    'I-ORGANIZÁCIA': '#33FF57',  # Same type, same color
-    'B-LOKALITA': '#3357FF',  
-    'I-LOKALITA': '#3357FF',  
-}
-ner_models = {
-    'bertz': 'crabz/slovakbert-ner',
-}
-tokenizer = AutoTokenizer.from_pretrained("crabz/slovakbert-ner", add_prefix_space=True)
-model = AutoModelForTokenClassification.from_pretrained("crabz/slovakbert-ner")
-
-# Define your special tokens
-special_tokens = [
-    "<bold>", "</bold>", "<nbold>", "</nbold>",
-    "<size>", "</size>", "<nsize>", "</nsize>",
-    "<color>", "</color>", "<ncolor>", "</ncolor>",
-    "<italic>", "</italic>", "<nitalic>", "</nitalic>",
-]
-
-# Add special tokens to the tokenizer
-tokenizer.add_tokens(special_tokens)
-
-# Resize the model's token embeddings to account for the new tokens
-model.resize_token_embeddings(len(tokenizer))
-
-# Create a new NER pipeline using the updated model and tokenizer
-ner_pipeline = pipeline('ner', model=model, tokenizer=tokenizer)
-def annotate_texts_with_ner(pdf_text_id):
-    pdf_text = PdfText.query.get(pdf_text_id)
-    if not pdf_text:
-        return "PDF text not found", 404
-
-    # Get NER annotations
-    ner_annotations = ner_pipeline(pdf_text.text)
-
-    # Start from the beginning of the text
-    last_index = 0
-    current_text = ''
-    for ann in ner_annotations:
-        # Append current word to form whole tokens; handle subword tokenization by checking for full words
-        if ann['word'].startswith('Ġ'):
-            # If it starts with 'Ġ', it's a new word
-            if current_text:
-                # Process the previous accumulated text if there is any
-                process_token(current_text, last_index, last_index + len(current_text), pdf_text.id, current_annotation)
-            # Reset for new word
-            current_text = ann['word'][1:]  # Remove the 'Ġ' for clean text
-            last_index = ann['start']  # Update the start index to current word's start
-            current_annotation = get_annotation_id(ner_map.get(ann['entity'], '0'))
-        else:
-            # Continue appending to form a full word from subwords
-            current_text += ann['word']
-
-    # Process any remaining text
-    if current_text:
-        process_token(current_text, last_index, last_index + len(current_text), pdf_text.id, current_annotation)
-
-    db.session.commit()
-    return "Tokenization and annotation completed successfully."
-
-def process_token(word, start, end, pdf_text_id, annotation_id):
-    new_token = Token(word=word, start=start, end=end, pdf_text_id=pdf_text_id, annotation_id=annotation_id)
-    db.session.add(new_token)
-
-def get_annotation_id(entity_label):
-    if entity_label == '0':  # Assume '0' means no annotation
-        return None
-    annotation = Annotation.query.filter_by(text=entity_label).first()
-    if not annotation:
-        # Assume entity_label is actually a label like 'B-OSOBA', not an ID
-        color = entity_color_map.get(entity_label)
-        annotation = Annotation(text=entity_label, color=color)
-        db.session.add(annotation)
-        db.session.flush()  # This assigns an ID to the new annotation
-    return annotation.id
 
 @annotation_routes.route('/assign_annotation', methods=['POST'])
 def assign_annotation():
@@ -172,13 +92,9 @@ def generate_csv_data(pdf_text_id):
         writer.writerow([pdf_text_id, current_line_id, formatted_tokens, formatted_annotations])
 
     output.seek(0)  # Move to the beginning of the stream
-    return output.getvalue()
+    return Response(output.getvalue(), mimetype='text/csv', headers={"Content-Disposition": f"attachment;filename=annotations_{pdf_text_id}.csv"})
+  
        
-
-       
-
-
-
 def generate_jsonl_data(pdf_text_id):
     # Fetch the PDF text based on the ID
     pdf_text_record = PdfText.query.get(pdf_text_id)
@@ -228,31 +144,19 @@ def generate_jsonl_data(pdf_text_id):
     )
 
 
+
 @annotation_routes.route('/export_annotations/<int:pdf_text_id>', methods=['GET'])
 def export_annotations(pdf_text_id):
-    style = request.args.get('style', 'normal')
     format_type = request.args.get('format', 'json')
-    # Export annotations based on the requested format and style
+    style = request.args.get('style', 'normal')
+
     if format_type == 'json':
         return generate_jsonl_data(pdf_text_id)
-        pass
-    elif format_type == 'csv':
-        if style == 'bio':
-            # Call the function that generates 'bio' style CSV data
-            csv_data = generate_csv_data(pdf_text_id)
-            return Response(csv_data, mimetype='text/csv', headers={"Content-Disposition": f"attachment;filename=annotations_{pdf_text_id}.csv"})
-        else:
-            # Handle 'normal' style CSV export if necessary
-            pass
-    elif format_type == 'xml':
-        # XML export logic (not shown for brevity)
-        pass
+    elif format_type == 'csv' and style == 'bio':
+        return generate_csv_data(pdf_text_id)
     else:
-        return jsonify({'error': 'Invalid export format'}), 400
-
+        return jsonify({'error': 'Invalid format or style specified'}), 400
     
-
-
 @annotation_routes.route('/add', methods=['POST'])
 def add_annotation():
     data = request.json

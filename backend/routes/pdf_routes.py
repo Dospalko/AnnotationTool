@@ -8,7 +8,6 @@ import re
 from PyPDF2 import PdfReader 
 from docx import Document
 import os
-from routes.annotation_routes import annotate_texts_with_ner
 from models.project import Project
 import json
 from flask import Response,json
