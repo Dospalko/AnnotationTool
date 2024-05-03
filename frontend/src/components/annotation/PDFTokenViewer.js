@@ -8,6 +8,7 @@ import React, {
 import axios from "axios";
 import ExportAnnotationsButton from "./ExportAnnotationsButton";
 import { useTranslation } from "react-i18next";
+import ExportCleanAnnotationsButton from "./ExportCleanAnnotationsButton";
 
 function PDFTokenViewer(props) {
   const t = useTranslation().t;
@@ -159,8 +160,8 @@ function PDFTokenViewer(props) {
     const isSelected = currentSelection.has(token.id);
     return (
       <React.Fragment key={`${token.id}-${index}`}>
-        <span
-          className={`inline-block cursor-pointer px-1 py-0.5 m-0.5 rounded ${isSelected ? "bg-blue-200" : "bg-white"} hover:bg-blue-300`}
+        <div
+          className={`inline-block cursor-pointer px-1 text-center items-center py-0.5 m-0.5 rounded ${isSelected ? "bg-blue-200" : "bg-white"} hover:bg-blue-300`}
           onMouseDown={() => handleDragStart(token.id)}
           onMouseEnter={() => handleTokenMouseEnter(token.id)}
           onMouseUp={handleDragEnd}
@@ -175,7 +176,7 @@ function PDFTokenViewer(props) {
               ({token.annotation.text})
             </span>
           )}
-        </span>
+        </div>
         {token.word === '\n' && <hr className="w-full h-full"/>}  {/* Insert line break for newline tokens */}
       </React.Fragment>
     );
@@ -205,6 +206,8 @@ function PDFTokenViewer(props) {
   return (
     <div className=" whitespace-pre-wrap" onMouseLeave={handleDragEnd}>
       {error && <p className="text-red-500">Error: {error.message}</p>}
+      <ExportCleanAnnotationsButton pdfTextId={props.pdfTextId} />
+      
       <div className="flex justify-center m-auto items-center text-center mb-10">
         <button
           onClick={handleSaveTokens}

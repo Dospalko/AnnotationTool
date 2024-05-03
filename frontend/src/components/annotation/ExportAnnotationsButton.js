@@ -6,6 +6,7 @@ import { signIn, signOut, initClient } from './googleDriveSetup';
 
 function ExportAnnotationsButton({ pdfTextId }) {
   const [exportFormat, setExportFormat] = useState('json');  // Default to JSON
+  const [cleanExport, setCleanExport] = useState(false);  // State to handle clean export option
   const [showExportModal, setShowExportModal] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const { t } = useTranslation();
@@ -18,7 +19,6 @@ function ExportAnnotationsButton({ pdfTextId }) {
   }, []);
 
   useEffect(() => {
-    // Auto-clear the alert after 5 seconds
     const timer = setTimeout(() => setAlertInfo({ message: '', type: '' }), 5000);
     return () => clearTimeout(timer);
   }, [alertInfo]);
@@ -26,13 +26,13 @@ function ExportAnnotationsButton({ pdfTextId }) {
   const handleExportAnnotations = async (saveToDrive = false) => {
     try {
       let exportStyle = exportFormat === 'csv' ? 'bio' : 'normal'; // Always use 'bio' for CSV
-      const exportURL = `http://localhost:5000/export_annotations/${pdfTextId}?format=${exportFormat}&style=${exportStyle}`;
+      const exportURL = `http://localhost:5000/export_annotations/${pdfTextId}?format=${exportFormat}&style=${exportStyle}&clean=${cleanExport}`;
       const response = await axios.get(exportURL, { responseType: 'blob' });
       const data = response.data;
 
       if (saveToDrive && isSignedIn) {
         const accessToken = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
-        const metadata = { name: `annotations_${pdfTextId}.${exportFormat}`, mimeType: data.type };
+        const metadata = { name: `annotations_${pdfTextId}.${exportFormat}${cleanExport ? '_clean' : ''}`, mimeType: data.type };
         const form = new FormData();
         form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
         form.append('file', data);
@@ -43,35 +43,33 @@ function ExportAnnotationsButton({ pdfTextId }) {
           body: form,
         });
 
-        setAlertInfo({ message: 'Súbor bol uložený na Google Drive.', type: 'success' });
- 
+        setAlertInfo({ message: 'File saved to Google Drive.', type: 'success' });
       } else {
         const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `annotations_${pdfTextId}.${exportFormat}`);
+        link.setAttribute('download', `annotations_${pdfTextId}.${exportFormat}${cleanExport ? '_clean' : ''}`);
         document.body.appendChild(link);
         link.click();
         window.URL.revokeObjectURL(url);
-        setAlertInfo({ message: 'Súbor bol stiahnutý.', type: 'success' });
+        setAlertInfo({ message: 'File downloaded.', type: 'success' });
       }
       setShowExportModal(false);
     } catch (err) {
       console.error('Error exporting annotations:', err);
-      setAlertInfo({ message: 'Zlyhalo exportovanie anotácií. Skúste to znova.', type: 'error' });
-  
+      setAlertInfo({ message: 'Failed to export annotations. Please try again.', type: 'error' });
     }
   };
 
   return (
     <>
-     {alertInfo.message && (
+      {alertInfo.message && (
         <div className={`fixed bottom-5 right-5 p-4 mb-4 rounded-md text-white ${alertInfo.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`} role="alert">
           {alertInfo.message}
         </div>
       )}
       <button onClick={() => setShowExportModal(true)} className="my-8 ml-4 bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
-        Exportovať súbor
+        Export Annotations
       </button>
       {showExportModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
@@ -82,19 +80,23 @@ function ExportAnnotationsButton({ pdfTextId }) {
               <option value="json">JSON</option>
               <option value="csv">CSV (BIO)</option>
             </select>
+            <label className="block mb-4">
+              <input type="checkbox" checked={cleanExport} onChange={() => setCleanExport(!cleanExport)} />
+              {' '}Clean Export (No Stylistic Tags)
+            </label>
             <button onClick={() => handleExportAnnotations(false)} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
-              Stiahnut
+              Download
             </button>
             <button onClick={() => handleExportAnnotations(true)} className="ml-4 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
-              Ulozit na drive
+              Save to Drive
             </button>
             {!isSignedIn ? (
               <button onClick={signIn} className="ml-4 bg-orange-500 text-white p-2 rounded hover:bg-orange-600 transition duration-300">
-                {t('Login')}
+                Login
               </button>
             ) : (
               <button onClick={signOut} className="ml-4 bg-red-500 text-white p-2 rounded hover:bg-red-600 transition duration-300">
-                {t('Logout')}
+                Logout
               </button>
             )}
           </div>
