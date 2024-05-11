@@ -37,7 +37,7 @@ const Modal = ({ onConfirm, extractionOptions, setExtractionOptions, onCancel })
                   </div>
                   <div>
                       <label className="inline-flex items-center">
-                          <input type="checkbox" name="sized" checked={extractionOptions.ssized} onChange={handleChange} />
+                          <input type="checkbox" name="ssized" checked={extractionOptions.ssized} onChange={handleChange} />
                           <span className="ml-2">Ssized</span>
                       </label>
                   </div>

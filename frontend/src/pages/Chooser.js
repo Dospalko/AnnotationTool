@@ -5,11 +5,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import CreateProject from './CreateProject';
 import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
+import { useTranslation } from 'react-i18next';
 
 const Chooser = () => {
   const [projects, setProjects] = useState([]);
   const navigate = useNavigate();
-
+  const { t } = useTranslation();
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -36,7 +37,7 @@ const Chooser = () => {
       <div className="flex-grow p-8 container mx-auto">
         <CreateProject fetchProjects={fetchProjects} />
         <div className="mt-8">
-          <h2 className="text-3xl font-bold mb-6  text-white">Projekty</h2>
+          <h2 className="text-3xl font-bold mb-6  text-white">{t('projects')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.length > 0 ? (
               projects.map((project) => (
@@ -48,16 +49,16 @@ const Chooser = () => {
                   </div>
                   <div className="px-6 py-4 bg-gray-100 flex justify-end">
                     <button onClick={() => navigate(`/projects/${project.id}`)} className="text-white bg-green-500 font-semibold py-2 px-4">
-                      Otvoriť
+                    {t('Open')}
                     </button>
                     <button onClick={() => handleDeleteProject(project.id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2">
-                      Vymazať
+                    {t('delete')}
                     </button>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-200 text-xl">Nebol ešte vytvorený projekt.</p>
+              <p className="text-gray-200 text-xl"> {t('procreate')}Nebol ešte vytvorený projekt.</p>
             )}
           </div>
         </div>

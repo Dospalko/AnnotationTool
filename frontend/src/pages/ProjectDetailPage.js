@@ -6,6 +6,7 @@ import Footer from "../components/Footer/Footer";
 import Modal from "./Modal";
 
 import { ThreeDots } from "react-loader-spinner";
+import { useTranslation } from "react-i18next";
 const ProjectDetail = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const ProjectDetail = () => {
   const [selectedJSONLFile, setSelectedJSONLFile] = useState(null);
   const [selectedImportFile, setSelectedImportFile] = useState(null);
   const [alertInfo, setAlertInfo] = useState({ message: '', type: '' });
-
+  const { t } = useTranslation();
 
   const handleJSONLFileChange = (event) => {
     setSelectedJSONLFile(event.target.files[0]);
@@ -217,7 +218,7 @@ const handleUploadFiles = async (options) => {
   <div className="flex-grow p-12 bg-gray-900">
     <div className="max-w-4xl mx-auto shadow-lg rounded-lg bg-white text-black font-base p-6">
       <h2 className="text-2xl font-semibold mb-4">
-        Detaily projektu: {projectName}
+      {t('projectdetails')} {projectName}
       </h2>
       <div className="flex flex-col">
       <input
@@ -229,7 +230,7 @@ const handleUploadFiles = async (options) => {
         onClick={handleImportFile}
         className="w-full sm:w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4"
       >
-        Nahrajte už anotovaný súbor
+        {t('annotatedfile')} 
       </button>
       {isLoading && <ThreeDots />}
       <input
@@ -242,7 +243,7 @@ const handleUploadFiles = async (options) => {
         onClick={() => setShowModal(true)}
         className="w-full sm:w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
       >
-        Nahrajte súbor 
+          {t('import')} 
       </button>
       {showModal && (
         <Modal
@@ -262,13 +263,15 @@ const handleUploadFiles = async (options) => {
         onClick={uploadJSONLFile}
         className="w-full sm:w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
       >
-        Nahrajte JSONL súbor
+        {t('importjsonl')} 
+      
       </button>
       <button
         onClick={deleteAllFiles}
         className="w-full sm:w-full mt-5 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mb-4"
       >
-       Zmazať všetky súbory
+        {t('deleteall')} 
+       
       </button>
       </div>
           {isLoading && <ThreeDots />} {/* Display the Spinner when loading */}
@@ -281,11 +284,11 @@ const handleUploadFiles = async (options) => {
                 <div>
                   <h3 className="font-medium text-gray-800">{file.filename}</h3>
         
-                  <p>Počet tokenov: {file.tokensCount}</p>
-                  <p>Anotované tokeny: {file.annotatedTokensCount}</p>
-                  <p>Jedinečné anotácie: {file.uniqueAnnotationsCount}</p>
+                  <p> {t('tokencount')}: {file.tokensCount}</p>
+                  <p>{t('tokencountann')}: {file.annotatedTokensCount}</p>
+                  <p>{t('unique')}: {file.uniqueAnnotationsCount}</p>
                   <p>
-                    Proces anotácie: {file.annotatedPercentage.toFixed(2)}%
+                  {t('process')}: {file.annotatedPercentage.toFixed(2)}%
                   </p>
                   <div className="bg-gray-300 w-full rounded-full h-2.5 dark:bg-gray-700">
                     <div
@@ -300,7 +303,7 @@ const handleUploadFiles = async (options) => {
                     onClick={() => navigate(`/annotator/${file.id}`)}
                     className="bg-green-500 hover:bg-green-500 text-white font-bold py-2 px-4 rounded"
                   >
-                    Anotovať
+                      {t('Annotate')}
                   </button>
                   <button
                     onClick={async () => {
@@ -314,7 +317,7 @@ const handleUploadFiles = async (options) => {
                     }}
                     className="bg-[#F700C6] hover:bg-[#F700C6]/50 text-white font-bold py-2 px-4 rounded"
                   >
-                    Vymazať
+                    {t('delete')}
                   </button>
                 </div>
               </div>

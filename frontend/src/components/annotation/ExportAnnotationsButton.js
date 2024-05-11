@@ -69,7 +69,7 @@ function ExportAnnotationsButton({ pdfTextId }) {
         </div>
       )}
       <button onClick={() => setShowExportModal(true)} className="my-8 ml-4 bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
-        Export Annotations
+      {t('export')}
       </button>
       {showExportModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
@@ -82,21 +82,21 @@ function ExportAnnotationsButton({ pdfTextId }) {
             </select>
             <label className="block mb-4">
               <input type="checkbox" checked={cleanExport} onChange={() => setCleanExport(!cleanExport)} />
-              {' '}Clean Export (No Stylistic Tags)
+              {t('cleanexport')}
             </label>
             <button onClick={() => handleExportAnnotations(false)} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
-              Download
+            {t('download')}
             </button>
             <button onClick={() => handleExportAnnotations(true)} className="ml-4 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
-              Save to Drive
+            {t('drive')}
             </button>
             {!isSignedIn ? (
               <button onClick={signIn} className="ml-4 bg-orange-500 text-white p-2 rounded hover:bg-orange-600 transition duration-300">
-                Login
+                 {t('login')}
               </button>
             ) : (
               <button onClick={signOut} className="ml-4 bg-red-500 text-white p-2 rounded hover:bg-red-600 transition duration-300">
-                Logout
+                 {t('logout')}
               </button>
             )}
           </div>

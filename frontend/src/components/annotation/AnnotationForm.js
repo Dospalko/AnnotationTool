@@ -114,7 +114,7 @@ const AnnotationForm = () => {
         </div>
       </form>
       <AnnotationsSection
-        title="Obľúbené anotácie"
+        title={t('favorite')}
         annotations={favoriteAnnotations}
         toggleFavorite={toggleFavorite}
         deleteAnnotation={deleteAnnotation}
@@ -122,7 +122,7 @@ const AnnotationForm = () => {
         handleEdit={handleEdit}
       />
       <AnnotationsSection
-        title="Ostatné anotácie"
+        title={t('other')}
         annotations={nonFavoriteAnnotations}
         toggleFavorite={toggleFavorite}
         deleteAnnotation={deleteAnnotation}

@@ -8,8 +8,6 @@ import React, {
 import axios from "axios";
 import ExportAnnotationsButton from "./ExportAnnotationsButton";
 import { useTranslation } from "react-i18next";
-import ExportCleanAnnotationsButton from "./ExportCleanAnnotationsButton";
-
 function PDFTokenViewer(props) {
   const t = useTranslation().t;
   const [tokens, setTokens] = useState([]);
@@ -206,7 +204,7 @@ function PDFTokenViewer(props) {
   return (
     <div className=" whitespace-pre-wrap" onMouseLeave={handleDragEnd}>
       {error && <p className="text-red-500">Error: {error.message}</p>}
-      <ExportCleanAnnotationsButton pdfTextId={props.pdfTextId} />
+
       
       <div className="flex justify-center m-auto items-center text-center mb-10">
         <button
