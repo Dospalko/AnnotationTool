@@ -48,7 +48,7 @@ function ExportAnnotationsButton({ pdfTextId }) {
         const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `annotations_${pdfTextId}.${exportFormat}${cleanExport ? '_clean' : ''}`);
+        link.setAttribute('download', `annotations_${pdfTextId}.${exportFormat}`);
         document.body.appendChild(link);
         link.click();
         window.URL.revokeObjectURL(url);

@@ -267,8 +267,8 @@ def import_csv(file, project_id):
             db.session.add(new_token)
             start_offset = end_offset + 1  # Increment start_offset for the next token, including spaces
 
-        # Insert a newline token at the end of each line if it's not the last line
-        if line_index < len(tokens_data) - 1:
+        # Insert a newline token at the end of each line only if it's not the last line
+        if line_index < len(tokens_data) - 1 and not tokens_list[-1].endswith('\n'):
             newline_token = Token(word='\n', start=start_offset, end=start_offset, pdf_text_id=pdf_text.id, annotation_id=None)
             db.session.add(newline_token)
             start_offset += 1  # Increment start_offset for the newline

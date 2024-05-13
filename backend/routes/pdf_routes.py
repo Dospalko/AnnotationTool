@@ -84,7 +84,6 @@ def tokenize_text(text, pdf_text_id):
     return tokens
 
 def format_token_data(tokens):
-    """Format token data for JSON response, including annotation details."""
     return [
         {
             'id': token.id,

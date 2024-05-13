@@ -149,13 +149,25 @@ def generate_jsonl_data(pdf_text_id):
 def export_annotations(pdf_text_id):
     format_type = request.args.get('format', 'json')
     style = request.args.get('style', 'normal')
+    clean = request.args.get('clean', 'false')  # Get a parameter to decide if cleaning is needed
 
-    if format_type == 'json':
-        return generate_jsonl_data(pdf_text_id)
-    elif format_type == 'csv' and style == 'bio':
-        return generate_csv_data(pdf_text_id)
+    if clean == 'true':
+        if format_type == 'json':
+            return generate_jsonl_clean_data(pdf_text_id)
+        elif format_type == 'csv':
+            return generate_csv_clean_data(pdf_text_id)
+        else:
+            return jsonify({'error': 'Invalid format specified for clean export'}), 400
     else:
-        return jsonify({'error': 'Invalid format or style specified'}), 400
+        if format_type == 'json':
+            return generate_jsonl_data(pdf_text_id)
+        elif format_type == 'csv':
+            return generate_csv_data(pdf_text_id)
+        else:
+            return jsonify({'error': 'Invalid format or style specified'}), 400
+
+
+
     
 @annotation_routes.route('/add', methods=['POST'])
 def add_annotation():
@@ -235,3 +247,128 @@ def get_non_favorite_annotations():
                       "favorite": ann.favorite} for ann in non_favorite_annotations]
     return jsonify(non_favorites)
 
+
+
+
+def remove_html_tags(text):
+    # Corrected and expanded list of tags to include both standard and nested versions
+    tags_to_remove = [
+        "<bold>", "</bold>", "<nbold>", "</nbold>",
+        "<italic>", "</italic>", "<nitalic>", "</nitalic>",
+        "<color>", "</color>", "<ncolor>", "</ncolor>",
+        "<size>", "</size>", "<nsize>", "</nsize>",
+        "<ssize>", "</ssize>", "<nssize>", "</nssize>",
+        "<underline>", "</underline>", "<nunderline>", "</nunderline>"
+    ]
+    total_removed = 0
+    for tag in tags_to_remove:
+        tag_length = len(tag)
+        print(tag)
+        # Continue removing until tag is no longer found
+        while tag in text:
+            text = text.replace(tag, "")
+            total_removed += tag_length  # Add the length of the tag to the total removed length
+
+    return text, total_removed
+
+
+def generate_csv_clean_data(pdf_text_id):
+    # Fetch the PDF text based on the ID
+    pdf_text_record = PdfText.query.get(pdf_text_id)
+    if not pdf_text_record:
+        return jsonify({'error': "PDF text not found"}), 404
+
+    # Fetch annotations related to the PDF text
+    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id).order_by(Token.start.asc()).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # Writing header for CSV
+    header = ['document', 'id', 'tokens', 'ner_tags']
+    writer.writerow(header)
+
+    current_line_tokens = []
+    current_line_annotations = []
+    current_line_id = 1
+
+    for token in tokens:
+        cleaned_token, _ = remove_html_tags(token.word)
+
+        # Only add tokens that are not empty after tag removal
+        if cleaned_token:
+            current_line_tokens.append(cleaned_token)
+            # Append the token's annotation ID or 0 if no annotation exists
+            current_line_annotations.append(token.annotation_id if token.annotation_id else 0)
+
+        if token.word == '\n':
+            # End of line found, write the current line to the CSV
+            formatted_tokens = json.dumps(current_line_tokens).replace('"', "'")
+            formatted_annotations = json.dumps(current_line_annotations).replace('[', "['").replace(']', "']")
+            writer.writerow([pdf_text_id, current_line_id, formatted_tokens, formatted_annotations])
+
+            # Reset for the new line
+            current_line_tokens = []
+            current_line_annotations = []
+            current_line_id += 1
+
+    # Ensure any remaining tokens are written to the CSV if the document does not end with a newline
+    if current_line_tokens:
+        formatted_tokens = json.dumps(current_line_tokens).replace('"', "'")
+        formatted_annotations = json.dumps(current_line_annotations).replace('[', "['").replace(']', "']")
+        writer.writerow([pdf_text_id, current_line_id, formatted_tokens, formatted_annotations])
+
+    output.seek(0)  # Move to the beginning of the stream
+    return Response(output.getvalue(), mimetype='text/csv', headers={"Content-Disposition": f"attachment;filename=annotations_{pdf_text_id}.csv"})
+
+def generate_jsonl_clean_data(pdf_text_id):
+    # Fetch the PDF text based on the ID
+    pdf_text_record = PdfText.query.get(pdf_text_id)
+    if not pdf_text_record:
+        return jsonify({'error': "PDF text not found"}), 404
+
+    tokens = Token.query.filter(Token.pdf_text_id == pdf_text_id).order_by(Token.start.asc()).all()
+    if not tokens:
+        return jsonify({'error': "No tokens found for the given PDF text ID"}), 404
+
+    # Initialize variables to keep track of the full text and annotations
+    full_text = ''
+    labels = []
+    offset = 0  # Start offset for labels
+    total_removed = 0  # Total characters removed due to tag cleaning
+
+    for token in tokens:
+        cleaned_token, chars_removed = remove_html_tags(token.word)
+
+        # Update the start and end offsets for the annotation
+        if token.annotation_id and cleaned_token:  # Ensure we have a non-empty token
+            annotation = Annotation.query.get(token.annotation_id)
+            if annotation:
+                labels.append({
+                    'start': offset,
+                    'end': offset + len(cleaned_token),
+                    'label': annotation.text
+                })
+
+        # Append token word to full text and update offset
+        full_text += cleaned_token + " "
+        offset += len(cleaned_token) + 1  # Update offset for spaces
+        total_removed += chars_removed
+
+    # JSONL formatted string for each line/document
+    jsonl_data = {
+        'id': pdf_text_id,
+        'text': full_text.strip(),
+        'labels': labels,
+        'Comments': []
+    }
+    # Write JSONL data to output buffer
+    output = StringIO()
+    output.write(json.dumps(jsonl_data) + '\n')
+    output.seek(0)  # Move to the beginning of the stream
+
+    return Response(
+        output.getvalue(),
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment;filename={pdf_text_id}_annotations.jsonl'}
+    )
