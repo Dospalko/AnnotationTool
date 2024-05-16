@@ -116,7 +116,6 @@ def upload_files_to_project(project_id):
         if file_extension == '.pdf':
             text = extract_text(uploaded_file.stream)
             text = extract_text_line_by_line_with_styles(uploaded_file.stream, bold, italic, colored, sized, ssized, False)
-            print(text)
         elif file_extension == '.docx':
             text = extract_text_from_docx(uploaded_file.stream)
         elif file_extension == '.txt':

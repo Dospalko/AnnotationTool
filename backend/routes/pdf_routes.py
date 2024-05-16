@@ -57,7 +57,6 @@ def tokenize_pdf(pdf_text_id):
         existing_tokens = Token.query.filter_by(pdf_text_id=pdf_text_id).order_by(Token.start.asc()).all()  # Fetch again ordered
 
     tokens_data = format_token_data(existing_tokens)
-    print(tokens_data)
     return jsonify(tokens_data), 200
 
 def tokenize_text(text, pdf_text_id):

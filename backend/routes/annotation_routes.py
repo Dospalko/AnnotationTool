@@ -263,7 +263,6 @@ def remove_html_tags(text):
     total_removed = 0
     for tag in tags_to_remove:
         tag_length = len(tag)
-        print(tag)
         # Continue removing until tag is no longer found
         while tag in text:
             text = text.replace(tag, "")
